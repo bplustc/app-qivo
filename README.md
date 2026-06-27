@@ -35,6 +35,14 @@ Qivo es una aplicacion web de reservas para traslados en Quito y hacia/desde el 
 - `sitemap.xml`: Sitemap XML para indexacion.
 - `VERSIONES.md`: Historial de cambios por version.
 
+## Versionado
+El proyecto usa versionado semantico:
+- MAJOR: cambios incompatibles.
+- MINOR: nuevas funcionalidades compatibles.
+- PATCH: correcciones y mejoras menores.
+
+Consulta el detalle historico en `VERSIONES.md`.
+
 ## SEO implementado
 - Meta description y keywords.
 - Open Graph para compartir en redes.
