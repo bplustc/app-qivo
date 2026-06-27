@@ -1,7 +1,8 @@
 let qivoMapInstance = null;
 let qivoMapMarker = null;
-let qivoMapGeocoder = null;
 let qivoAutocomplete = null;
+let qivoAutocompleteService = null;
+let qivoPlacesService = null;
 let qivoTypingGeocodeTimer = null;
 
 function setMapCoordinates(latLng, direccionInput, latitudInput, longitudInput) {
@@ -15,18 +16,6 @@ function setMapCoordinates(latLng, direccionInput, latitudInput, longitudInput) 
     if (qivoMapMarker) {
         qivoMapMarker.setPosition(latLng);
     }
-}
-
-function reverseGeocodeAddress(latLng, direccionInput) {
-    if (!qivoMapGeocoder || !latLng || !direccionInput) {
-        return;
-    }
-
-    qivoMapGeocoder.geocode({ location: latLng }, function(results, status) {
-        if (status === 'OK' && Array.isArray(results) && results[0]) {
-            direccionInput.value = results[0].formatted_address;
-        }
-    });
 }
 
 window.initQivoMap = function() {
@@ -56,7 +45,6 @@ window.initQivoMap = function() {
         title: 'Punto de retiro',
     });
 
-    qivoMapGeocoder = new window.google.maps.Geocoder();
     setMapCoordinates(qivoMapMarker.getPosition(), direccionInput, latitudInput, longitudInput);
 
     qivoMapInstance.addListener('click', function(event) {
@@ -65,7 +53,6 @@ window.initQivoMap = function() {
         }
 
         setMapCoordinates(event.latLng, direccionInput, latitudInput, longitudInput);
-        reverseGeocodeAddress(event.latLng, direccionInput);
     });
 
     qivoMapMarker.addListener('dragend', function(event) {
@@ -74,13 +61,15 @@ window.initQivoMap = function() {
         }
 
         setMapCoordinates(event.latLng, direccionInput, latitudInput, longitudInput);
-        reverseGeocodeAddress(event.latLng, direccionInput);
     });
 
     qivoAutocomplete = new window.google.maps.places.Autocomplete(direccionInput, {
         fields: ['formatted_address', 'geometry', 'name'],
         componentRestrictions: { country: 'ec' },
     });
+
+    qivoAutocompleteService = new window.google.maps.places.AutocompleteService();
+    qivoPlacesService = new window.google.maps.places.PlacesService(qivoMapInstance);
 
     qivoAutocomplete.addListener('place_changed', function() {
         const place = qivoAutocomplete.getPlace();
@@ -106,32 +95,40 @@ window.initQivoMap = function() {
             clearTimeout(qivoTypingGeocodeTimer);
         }
 
-        if (query.length < 5) {
+        if (query.length < 4 || !qivoAutocompleteService || !qivoPlacesService) {
             return;
         }
 
         qivoTypingGeocodeTimer = setTimeout(function() {
-            if (!qivoMapGeocoder) {
-                return;
-            }
-
-            qivoMapGeocoder.geocode(
+            qivoAutocompleteService.getPlacePredictions(
                 {
-                    address: query,
-                    componentRestrictions: { country: 'EC' },
+                    input: query,
+                    componentRestrictions: { country: 'ec' },
                 },
-                function(results, status) {
-                    if (status !== 'OK' || !Array.isArray(results) || !results[0] || !results[0].geometry || !results[0].geometry.location) {
+                function(predictions, status) {
+                    if (status !== 'OK' || !Array.isArray(predictions) || !predictions[0] || !predictions[0].place_id) {
                         return;
                     }
 
-                    const location = results[0].geometry.location;
-                    qivoMapInstance.setCenter(location);
-                    qivoMapInstance.setZoom(16);
-                    setMapCoordinates(location, direccionInput, latitudInput, longitudInput);
+                    qivoPlacesService.getDetails(
+                        {
+                            placeId: predictions[0].place_id,
+                            fields: ['geometry', 'formatted_address', 'name'],
+                        },
+                        function(placeDetails, detailsStatus) {
+                            if (detailsStatus !== 'OK' || !placeDetails || !placeDetails.geometry || !placeDetails.geometry.location) {
+                                return;
+                            }
+
+                            const location = placeDetails.geometry.location;
+                            qivoMapInstance.setCenter(location);
+                            qivoMapInstance.setZoom(16);
+                            setMapCoordinates(location, direccionInput, latitudInput, longitudInput);
+                        }
+                    );
                 }
             );
-        }, 500);
+        }, 450);
     });
 
     window.qivoRefreshMap = function() {
