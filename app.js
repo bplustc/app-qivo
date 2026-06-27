@@ -2,6 +2,7 @@ let qivoMapInstance = null;
 let qivoMapMarker = null;
 let qivoMapGeocoder = null;
 let qivoAutocomplete = null;
+let qivoTypingGeocodeTimer = null;
 
 function setMapCoordinates(latLng, direccionInput, latitudInput, longitudInput) {
     if (!latLng) {
@@ -98,6 +99,41 @@ window.initQivoMap = function() {
         }
     });
 
+    direccionInput.addEventListener('input', function() {
+        const query = direccionInput.value.trim();
+
+        if (qivoTypingGeocodeTimer) {
+            clearTimeout(qivoTypingGeocodeTimer);
+        }
+
+        if (query.length < 5) {
+            return;
+        }
+
+        qivoTypingGeocodeTimer = setTimeout(function() {
+            if (!qivoMapGeocoder) {
+                return;
+            }
+
+            qivoMapGeocoder.geocode(
+                {
+                    address: query,
+                    componentRestrictions: { country: 'EC' },
+                },
+                function(results, status) {
+                    if (status !== 'OK' || !Array.isArray(results) || !results[0] || !results[0].geometry || !results[0].geometry.location) {
+                        return;
+                    }
+
+                    const location = results[0].geometry.location;
+                    qivoMapInstance.setCenter(location);
+                    qivoMapInstance.setZoom(16);
+                    setMapCoordinates(location, direccionInput, latitudInput, longitudInput);
+                }
+            );
+        }, 500);
+    });
+
     window.qivoRefreshMap = function() {
         if (!qivoMapInstance || !qivoMapMarker) {
             return;
@@ -113,6 +149,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const serviceCards = document.querySelectorAll('.service-card');
     const modal = document.getElementById('modal-solicitud');
     const closeModal = document.querySelector('.close-modal');
+    const telefonoInput = document.getElementById('telefono');
+
+    if (telefonoInput) {
+        telefonoInput.addEventListener('input', function() {
+            const digitsOnly = telefonoInput.value.replace(/\D/g, '').slice(0, 10);
+            telefonoInput.value = digitsOnly;
+        });
+    }
 
     // Mostrar modal al hacer clic en una tarjeta
     // --- Personalización de label de dirección según servicio ---
@@ -231,6 +275,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const latitud = latitudInput ? latitudInput.value : '';
             const longitud = longitudInput ? longitudInput.value : '';
             const vehiculo = vehiculos[conductor];
+
+            if (!/^\d{10}$/.test(telefono)) {
+                alert('El teléfono debe tener exactamente 10 dígitos numéricos.');
+                return;
+            }
+
             if (!vehiculo) {
                 alert('Selecciona un conductor válido.');
                 return;

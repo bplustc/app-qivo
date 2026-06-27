@@ -11,6 +11,12 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="mobile-only-overlay" role="alert" aria-live="polite">
+        <div class="mobile-only-box">
+            <h2>Disponible solo en móvil</h2>
+            <p>Por ahora Qivo está optimizado para dispositivos móviles. Abre esta página desde tu teléfono para continuar.</p>
+        </div>
+    </div>
     
     <header class="main-header">
         <div class="header-row">
@@ -54,7 +60,7 @@
                 </div>
                 <div class="form-group">
                     <label for="telefono">Teléfono</label>
-                    <input type="tel" id="telefono" name="telefono" required />
+                    <input type="tel" id="telefono" name="telefono" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" required />
                 </div>
                 <div class="form-group">
                     <label for="correo">Correo</label>
@@ -95,7 +101,7 @@
     <footer class="main-footer">
         <div>&copy; 2026 Qivo. Diseñado por <strong><a href="https://bplustc.netlify.app/" target="_blank" rel="noopener">B+ Technology</a></strong>.</div>
     </footer>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBDRHK_S_6--zoGpg3hiGh5DeRIue9WNPE&libraries=places&callback=initQivoMap" async defer></script>
     <script src="app.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBDRHK_S_6--zoGpg3hiGh5DeRIue9WNPE&libraries=places&callback=initQivoMap" async defer></script>
 </body>
 </html>
