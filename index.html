@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Qivo - Traslados en Quito y Aeropuerto | Quito en Movimiento</title>
+    <meta name="description" content="Traslados seguros en Quito y hacia/desde el aeropuerto. Reserva tu viaje con conductores confiables y atención personalizada. Qivo, Quito en Movimiento.">
+    <meta name="keywords" content="Quito, aeropuerto, traslados, taxi, transporte, viajes, conductor, reserva, Ecuador, Qivo">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://qivo.com/">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    
+    <header class="main-header">
+        <div class="header-row">
+                <a href="/" class="logo-link" style="display:inline-flex;align-items:center;text-decoration:none;">
+                    <img src="images/logo-qivo.png" alt="Logo Qivo - Traslados Quito y Aeropuerto" class="icono-logo-qivo" />
+                </a>
+                <h1>ivo</h1>
+        </div>
+        <h2>Quito en Movimiento</h2>
+    </header>
+
+    <div class="main-content-center">
+        <div class="services-container">
+            <div class="service-card aeropuerto-ida" data-service="Hacia el Aeropuerto">
+                <div class="service-icon aeropuerto-ida-icon">
+                    <img src="images/despegar.png" alt="Traslado Hacia el Aeropuerto" />
+                </div>
+                <div class="service-name">Hacia el Aeropuerto</div>
+            </div>
+            <div class="service-card aeropuerto-vuelta" data-service="Desde el Aeropuerto">
+                <div class="service-icon aeropuerto-vuelta-icon">
+                    <img src="images/aterrizaje.png" alt="Traslado Desde el Aeropuerto" />
+                </div>
+                <div class="service-name">Desde el Aeropuerto</div>
+            </div>
+        </div>
+    </div>
+     <!-- Modal de Solicitud de Viaje -->
+    <div id="modal-solicitud" class="modal-solicitud" style="display:none;">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Solicitar viaje</h2>
+            <form id="form-solicitud">
+                <div class="form-group">
+                    <label for="nombre">Nombre</label>
+                    <input type="text" id="nombre" name="nombre" required />
+                </div>
+                <div class="form-group">
+                    <label for="apellido">Apellido</label>
+                    <input type="text" id="apellido" name="apellido" required />
+                </div>
+                <div class="form-group">
+                    <label for="telefono">Teléfono</label>
+                    <input type="tel" id="telefono" name="telefono" required />
+                </div>
+                <div class="form-group">
+                    <label for="correo">Correo</label>
+                    <input type="email" id="correo" name="correo" required />
+                </div>
+                <div class="form-group">
+                    <label for="direccion">Dirección de Recogida</label>
+                    <input type="text" id="direccion" name="direccion" required />
+                </div>
+                <div class="form-group map-group">
+                    <label for="qivo-map">Ubicación en mapa (clic para seleccionar)</label>
+                    <div id="qivo-map" class="qivo-map" aria-label="Mapa para seleccionar el punto de retiro"></div>
+                    <small class="map-help">Puedes buscar una dirección en el campo anterior o tocar en el mapa para fijar el punto exacto.</small>
+                    <input type="hidden" id="latitud" name="latitud" />
+                    <input type="hidden" id="longitud" name="longitud" />
+                </div>
+                <div class="form-group">
+                    <label for="fecha">Fecha de Recogida</label>
+                    <input type="date" id="fecha" name="fecha" required />
+                </div>
+                <div class="form-group">
+                    <label for="hora">Hora de Recogida</label>
+                    <input type="time" id="hora" name="hora" required />
+                </div>
+                <div class="form-group">
+                    <label for="conductor">Nombre del Conductor</label>
+                    <select id="conductor" name="conductor" required>
+                        <option value="">Selecciona un conductor</option>
+                        <option value="Ramon Bolivar">Ramón Bolívar</option>
+                        <option value="Jesus Reyes">Jesús Reyes</option>
+                    </select>
+                </div>
+                <div id="info-vehiculo" class="vehiculo-info" style="display:none;"></div>
+                <button type="submit" class="btn-enviar">Enviar solicitud</button>
+            </form>
+        </div>
+    </div>
+    <footer class="main-footer">
+        <div>&copy; 2026 Qivo. Diseñado por <strong><a href="https://bplustc.netlify.app/" target="_blank" rel="noopener">B+ Technology</a></strong>.</div>
+    </footer>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBDRHK_S_6--zoGpg3hiGh5DeRIue9WNPE&libraries=places&callback=initQivoMap" async defer></script>
+    <script src="app.js"></script>
+</body>
+</html>
