@@ -1,8 +1,6 @@
 let qivoMapInstance = null;
 let qivoMapMarker = null;
 let qivoAutocomplete = null;
-let qivoAutocompleteService = null;
-let qivoPlacesService = null;
 let qivoTypingGeocodeTimer = null;
 
 function setMapCoordinates(latLng, direccionInput, latitudInput, longitudInput) {
@@ -68,9 +66,6 @@ window.initQivoMap = function() {
         componentRestrictions: { country: 'ec' },
     });
 
-    qivoAutocompleteService = new window.google.maps.places.AutocompleteService();
-    qivoPlacesService = new window.google.maps.places.PlacesService(qivoMapInstance);
-
     qivoAutocomplete.addListener('place_changed', function() {
         const place = qivoAutocomplete.getPlace();
 
@@ -95,40 +90,34 @@ window.initQivoMap = function() {
             clearTimeout(qivoTypingGeocodeTimer);
         }
 
-        if (query.length < 4 || !qivoAutocompleteService || !qivoPlacesService) {
+        if (query.length < 5) {
             return;
         }
 
         qivoTypingGeocodeTimer = setTimeout(function() {
-            qivoAutocompleteService.getPlacePredictions(
-                {
-                    input: query,
-                    componentRestrictions: { country: 'ec' },
-                },
-                function(predictions, status) {
-                    if (status !== 'OK' || !Array.isArray(predictions) || !predictions[0] || !predictions[0].place_id) {
+            const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ec&q=' + encodeURIComponent(query);
+
+            fetch(url, { headers: { 'Accept-Language': 'es' } })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (!Array.isArray(data) || !data[0]) {
                         return;
                     }
 
-                    qivoPlacesService.getDetails(
-                        {
-                            placeId: predictions[0].place_id,
-                            fields: ['geometry', 'formatted_address', 'name'],
-                        },
-                        function(placeDetails, detailsStatus) {
-                            if (detailsStatus !== 'OK' || !placeDetails || !placeDetails.geometry || !placeDetails.geometry.location) {
-                                return;
-                            }
+                    const lat = parseFloat(data[0].lat);
+                    const lng = parseFloat(data[0].lon);
 
-                            const location = placeDetails.geometry.location;
-                            qivoMapInstance.setCenter(location);
-                            qivoMapInstance.setZoom(16);
-                            setMapCoordinates(location, direccionInput, latitudInput, longitudInput);
-                        }
-                    );
-                }
-            );
-        }, 450);
+                    if (!isFinite(lat) || !isFinite(lng)) {
+                        return;
+                    }
+
+                    const latLng = new window.google.maps.LatLng(lat, lng);
+                    qivoMapInstance.setCenter(latLng);
+                    qivoMapInstance.setZoom(16);
+                    setMapCoordinates(latLng, direccionInput, latitudInput, longitudInput);
+                })
+                .catch(function() {});
+        }, 600);
     });
 
     window.qivoRefreshMap = function() {
