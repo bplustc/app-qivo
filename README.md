@@ -39,6 +39,20 @@ La carpeta `dist/` se genera con:
 - CSS copiado para mantener compatibilidad de estilos actual.
 - JavaScript minificado y ofuscado (mangle/compress).
 
+## Deploy automatico (GitHub Pages)
+El repositorio incluye el workflow `deploy-pages.yml` en `.github/workflows/`.
+
+Flujo:
+1. Cada push a `main` ejecuta `npm ci` y `npm run build`.
+2. Se publica automaticamente la carpeta `dist/` en GitHub Pages.
+
+Configuracion requerida en GitHub:
+1. Ir a Settings > Pages.
+2. En Build and deployment, seleccionar Source: GitHub Actions.
+3. Guardar cambios.
+
+Una vez habilitado, cada commit en `main` dispara el despliegue.
+
 ## Estructura del proyecto
 - `index.html`: Estructura principal, formulario y metadatos SEO.
 - `styles.css`: Estilos generales, modal y comportamiento de interfaz movil.
