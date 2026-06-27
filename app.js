@@ -147,11 +147,60 @@ document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('modal-solicitud');
     const closeModal = document.querySelector('.close-modal');
     const telefonoInput = document.getElementById('telefono');
+    const telefonoError = document.getElementById('telefono-error');
+
+    function updatePhoneValidation(showWhenEmpty) {
+        if (!telefonoInput) {
+            return true;
+        }
+
+        const phoneValue = telefonoInput.value.trim();
+        const length = phoneValue.length;
+
+        if (!showWhenEmpty && length === 0) {
+            telefonoInput.setCustomValidity('');
+            telefonoInput.classList.remove('input-error');
+            if (telefonoError) {
+                telefonoError.textContent = '';
+                telefonoError.style.display = 'none';
+            }
+            return false;
+        }
+
+        if (length !== 10) {
+            const faltan = Math.max(0, 10 - length);
+            const message = faltan > 0
+                ? `El teléfono debe tener 10 dígitos. Faltan ${faltan}.`
+                : 'El teléfono debe tener exactamente 10 dígitos numéricos.';
+
+            telefonoInput.setCustomValidity(message);
+            telefonoInput.classList.add('input-error');
+
+            if (telefonoError) {
+                telefonoError.textContent = message;
+                telefonoError.style.display = 'block';
+            }
+            return false;
+        }
+
+        telefonoInput.setCustomValidity('');
+        telefonoInput.classList.remove('input-error');
+        if (telefonoError) {
+            telefonoError.textContent = '';
+            telefonoError.style.display = 'none';
+        }
+        return true;
+    }
 
     if (telefonoInput) {
         telefonoInput.addEventListener('input', function() {
             const digitsOnly = telefonoInput.value.replace(/\D/g, '').slice(0, 10);
             telefonoInput.value = digitsOnly;
+            updatePhoneValidation(false);
+        });
+
+        telefonoInput.addEventListener('blur', function() {
+            updatePhoneValidation(true);
         });
     }
 
@@ -228,12 +277,6 @@ document.addEventListener('DOMContentLoaded', function() {
             Modelo: 'Chevrolet Beat',
             Color: 'Plateado',
             Whatsapp: '593999893971'
-        },
-        'Jesus Reyes': {
-            Placa: 'GCT-3331',
-            Modelo: 'Chevrolet Beat',
-            Color: 'Rojo',
-            Whatsapp: '593984940957'
         }
     };
 
@@ -273,8 +316,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const longitud = longitudInput ? longitudInput.value : '';
             const vehiculo = vehiculos[conductor];
 
-            if (!/^\d{10}$/.test(telefono)) {
-                alert('El teléfono debe tener exactamente 10 dígitos numéricos.');
+            if (!updatePhoneValidation(true)) {
+                telefonoInput.focus();
                 return;
             }
 

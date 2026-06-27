@@ -411,6 +411,19 @@ html, body {
 .form-group select:focus {
     border: 1.5px solid #6366f1;
 }
+
+.form-error {
+    margin-top: 6px;
+    font-size: 0.82rem;
+    color: #d93025;
+    line-height: 1.35;
+}
+
+.form-group input.input-error {
+    border: 1.5px solid #d93025;
+    background: #fff7f7;
+}
+
 .btn-enviar {
     width: 100%;
     padding: 12px 0;

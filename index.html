@@ -60,7 +60,8 @@
                 </div>
                 <div class="form-group">
                     <label for="telefono">Teléfono</label>
-                    <input type="tel" id="telefono" name="telefono" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" required />
+                    <input type="tel" id="telefono" name="telefono" inputmode="numeric" pattern="[0-9]{10}" minlength="10" maxlength="10" aria-describedby="telefono-error" required />
+                    <small id="telefono-error" class="form-error" style="display:none;"></small>
                 </div>
                 <div class="form-group">
                     <label for="correo">Correo</label>
@@ -90,7 +91,6 @@
                     <select id="conductor" name="conductor" required>
                         <option value="">Selecciona un conductor</option>
                         <option value="Ramon Bolivar">Ramón Bolívar</option>
-                        <option value="Jesus Reyes">Jesús Reyes</option>
                     </select>
                 </div>
                 <div id="info-vehiculo" class="vehiculo-info" style="display:none;"></div>
