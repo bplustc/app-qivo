@@ -1,5 +1,6 @@
 # Dependencias locales
 node_modules/
+dist/
 
 # Logs
 npm-debug.log*

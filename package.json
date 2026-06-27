@@ -1,0 +1,27 @@
+{
+  "name": "app-qivo",
+  "version": "1.0.0",
+  "description": "Qivo es una aplicacion web de reservas para traslados en Quito y hacia/desde el aeropuerto, con enfoque en experiencia movil y solicitud rapida por WhatsApp.",
+  "main": "index.html",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "build:prod": "node scripts/build.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bplustc/app-qivo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/bplustc/app-qivo/issues"
+  },
+  "homepage": "https://github.com/bplustc/app-qivo#readme",
+  "devDependencies": {
+    "clean-css-cli": "^5.6.3",
+    "html-minifier-terser": "^7.2.0",
+    "terser": "^5.48.0"
+  }
+}

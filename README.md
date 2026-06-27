@@ -18,6 +18,7 @@ Qivo es una aplicacion web de reservas para traslados en Quito y hacia/desde el 
 - API Key de Google Maps con estas APIs habilitadas:
 	- Maps JavaScript API
 	- Places API
+- Node.js LTS (para generar build de produccion).
 
 ## Instalacion y uso
 1. Clona este repositorio.
@@ -25,6 +26,18 @@ Qivo es una aplicacion web de reservas para traslados en Quito y hacia/desde el 
 3. Ejecuta un servidor local estatico (ejemplo: Live Server en el puerto 5500).
 4. Verifica que la API Key de Google Maps este configurada en `index.html`.
 5. Abre la pagina en movil o emulacion movil para probar el flujo completo.
+
+## Build de produccion
+1. Instala dependencias:
+	- `npm install`
+2. Genera la version optimizada:
+	- `npm run build`
+3. Publica el contenido de la carpeta `dist/`.
+
+La carpeta `dist/` se genera con:
+- HTML minificado.
+- CSS copiado para mantener compatibilidad de estilos actual.
+- JavaScript minificado y ofuscado (mangle/compress).
 
 ## Estructura del proyecto
 - `index.html`: Estructura principal, formulario y metadatos SEO.
