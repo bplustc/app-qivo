@@ -23,6 +23,19 @@ let qivoTypingTimer = null;
 let pendingAuthMode = null;
 let welcomeTimer = null;
 let screenTransitionCleanupTimer = null;
+let hasInitializedFlow = false;
+
+function isDesktopRestricted() {
+  const hasDesktopPointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const isMobileUa = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  return hasDesktopPointer && !isMobileUa;
+}
+
+function applyDesktopRestriction() {
+  const blocked = isDesktopRestricted();
+  document.body.classList.toggle('is-desktop-blocked', blocked);
+  return !blocked;
+}
 
 function getRequests() {
   try {
@@ -432,6 +445,20 @@ function registerServiceWorker() {
 document.addEventListener('DOMContentLoaded', () => {
   registerServiceWorker();
 
+  const tryStartFlow = () => {
+    const allowed = applyDesktopRestriction();
+    if (!allowed || hasInitializedFlow) {
+      return;
+    }
+
+    hasInitializedFlow = true;
+    showWelcomeFlow();
+  };
+
+  window.addEventListener('resize', () => {
+    tryStartFlow();
+  });
+
   document.querySelectorAll('[data-enter-mode]').forEach((button) => {
     button.addEventListener('click', () => {
       const mode = button.dataset.enterMode;
@@ -610,5 +637,5 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('logout-passenger')?.addEventListener('click', logout);
   document.getElementById('logout-driver')?.addEventListener('click', logout);
 
-  showWelcomeFlow();
+  tryStartFlow();
 });

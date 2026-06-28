@@ -14,6 +14,53 @@ body {
   min-height: 100dvh;
 }
 
+.desktop-block-overlay {
+  display: none;
+  min-height: 100dvh;
+  padding: 24px;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 20% 20%, #dcfce7 0%, #eff6ff 48%, #e2e8f0 100%);
+}
+
+.desktop-block-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border: 1px solid #d1dce8;
+  border-radius: 18px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 16px 42px rgba(15, 23, 42, 0.12);
+}
+
+.desktop-block-card h2 {
+  margin: 12px 0 8px;
+}
+
+.desktop-block-card p {
+  margin: 0;
+  color: #475569;
+}
+
+.desktop-block-note {
+  margin-top: 8px !important;
+  color: #0f766e !important;
+  font-weight: 600;
+}
+
+body.is-desktop-blocked {
+  background: #ecfeff;
+}
+
+body.is-desktop-blocked #app-shell {
+  display: none;
+}
+
+body.is-desktop-blocked .desktop-block-overlay {
+  display: flex;
+}
+
 .screen {
   min-height: 100dvh;
   display: none;
