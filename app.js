@@ -1,357 +1,368 @@
+const STORAGE_SESSION = 'qivo_session_mode';
+const STORAGE_REQUESTS = 'qivo_requests';
+const STORAGE_PASSENGER_PROFILE = 'qivo_passenger_profile';
+
 let qivoMapInstance = null;
 let qivoMapMarker = null;
 let qivoAutocomplete = null;
-let qivoTypingGeocodeTimer = null;
+let qivoTypingTimer = null;
 
-function setMapCoordinates(latLng, direccionInput, latitudInput, longitudInput) {
-    if (!latLng) {
-        return;
-    }
-
-    latitudInput.value = String(latLng.lat());
-    longitudInput.value = String(latLng.lng());
-
-    if (qivoMapMarker) {
-        qivoMapMarker.setPosition(latLng);
-    }
+function getRequests() {
+  try {
+    const raw = localStorage.getItem(STORAGE_REQUESTS);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
 }
 
-window.initQivoMap = function() {
-    const mapContainer = document.getElementById('qivo-map');
-    const direccionInput = document.getElementById('direccion');
-    const latitudInput = document.getElementById('latitud');
-    const longitudInput = document.getElementById('longitud');
+function saveRequests(requests) {
+  localStorage.setItem(STORAGE_REQUESTS, JSON.stringify(requests));
+}
 
-    if (!mapContainer || !direccionInput || !latitudInput || !longitudInput || !window.google || !window.google.maps) {
-        return;
+function setActiveScreen(screenId) {
+  document.querySelectorAll('.screen').forEach((screen) => {
+    screen.classList.toggle('is-active', screen.id === screenId);
+  });
+}
+
+function setTab(mode, tab) {
+  const root = document.getElementById(`${mode}-tabs`);
+  if (!root) {
+    return;
+  }
+
+  root.querySelectorAll('.tab-panel').forEach((panel) => {
+    panel.classList.toggle('is-active', panel.dataset.tabPanel === tab);
+  });
+
+  document.querySelectorAll(`[data-nav-root="${mode}"] .nav-item`).forEach((item) => {
+    item.classList.toggle('is-active', item.dataset.tabTarget === tab);
+  });
+
+  if (mode === 'driver' && tab === 'home') {
+    renderDriverRequests();
+  }
+}
+
+function setMode(mode) {
+  localStorage.setItem(STORAGE_SESSION, mode);
+
+  if (mode === 'passenger') {
+    setActiveScreen('passenger-view');
+    setTab('passenger', 'home');
+    refreshPassengerProfile();
+    refreshMapIfNeeded();
+    return;
+  }
+
+  if (mode === 'driver') {
+    setActiveScreen('driver-view');
+    setTab('driver', 'home');
+    renderDriverRequests();
+    return;
+  }
+
+  localStorage.removeItem(STORAGE_SESSION);
+  setActiveScreen('auth-view');
+}
+
+function logout() {
+  localStorage.removeItem(STORAGE_SESSION);
+  setActiveScreen('auth-view');
+}
+
+function renderDriverRequests() {
+  const container = document.getElementById('driver-requests');
+  if (!container) {
+    return;
+  }
+
+  const requests = getRequests().filter((item) => item.conductor === 'Ramon Bolivar');
+
+  if (!requests.length) {
+    container.innerHTML = '<p class="empty-state">No tienes solicitudes por el momento.</p>';
+    return;
+  }
+
+  container.innerHTML = requests
+    .slice()
+    .reverse()
+    .map((item) => `
+      <article class="request-card">
+        <strong>${item.servicio}</strong>
+        <p><b>Cliente:</b> ${item.nombre} ${item.apellido}</p>
+        <p><b>Teléfono:</b> ${item.telefono}</p>
+        <p><b>Dirección:</b> ${item.direccion}</p>
+        <p><b>Fecha:</b> ${item.fecha} ${item.hora}</p>
+        <p><b>GPS:</b> ${item.latitud || '-'}, ${item.longitud || '-'}</p>
+      </article>
+    `)
+    .join('');
+}
+
+function refreshPassengerProfile() {
+  const nameTarget = document.getElementById('profile-passenger-name');
+  const phoneTarget = document.getElementById('profile-passenger-phone');
+  const profile = JSON.parse(localStorage.getItem(STORAGE_PASSENGER_PROFILE) || '{}');
+
+  if (nameTarget) {
+    nameTarget.textContent = profile.name || 'Sin definir';
+  }
+
+  if (phoneTarget) {
+    phoneTarget.textContent = profile.phone || 'Sin definir';
+  }
+}
+
+function validatePhone(input, errorElement) {
+  const digits = input.value.replace(/\D/g, '').slice(0, 10);
+  input.value = digits;
+
+  if (digits.length !== 10) {
+    const faltan = Math.max(0, 10 - digits.length);
+    const message = faltan > 0
+      ? `El teléfono debe tener 10 dígitos. Faltan ${faltan}.`
+      : 'El teléfono debe tener exactamente 10 dígitos.';
+
+    input.setCustomValidity(message);
+    if (errorElement) {
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+    }
+    return false;
+  }
+
+  input.setCustomValidity('');
+  if (errorElement) {
+    errorElement.textContent = '';
+    errorElement.style.display = 'none';
+  }
+  return true;
+}
+
+function setMapCoordinates(latLng, latInput, lngInput) {
+  if (!latLng || !latInput || !lngInput) {
+    return;
+  }
+
+  latInput.value = String(latLng.lat());
+  lngInput.value = String(latLng.lng());
+
+  if (qivoMapMarker) {
+    qivoMapMarker.setPosition(latLng);
+  }
+}
+
+function refreshMapIfNeeded() {
+  if (!qivoMapInstance || !qivoMapMarker || !window.google || !window.google.maps) {
+    return;
+  }
+
+  window.google.maps.event.trigger(qivoMapInstance, 'resize');
+  qivoMapInstance.setCenter(qivoMapMarker.getPosition());
+}
+
+window.initQivoMap = function initQivoMap() {
+  const mapContainer = document.getElementById('qivo-map');
+  const direccionInput = document.getElementById('direccion');
+  const latInput = document.getElementById('latitud');
+  const lngInput = document.getElementById('longitud');
+
+  if (!mapContainer || !direccionInput || !latInput || !lngInput || !window.google || !window.google.maps) {
+    return;
+  }
+
+  const quitoCenter = { lat: -0.180653, lng: -78.467834 };
+
+  qivoMapInstance = new window.google.maps.Map(mapContainer, {
+    center: quitoCenter,
+    zoom: 13,
+    mapTypeControl: false,
+    fullscreenControl: false,
+    streetViewControl: false,
+  });
+
+  qivoMapMarker = new window.google.maps.Marker({
+    map: qivoMapInstance,
+    position: quitoCenter,
+    draggable: true,
+  });
+
+  setMapCoordinates(qivoMapMarker.getPosition(), latInput, lngInput);
+
+  qivoMapInstance.addListener('click', (event) => {
+    if (!event.latLng) {
+      return;
+    }
+    setMapCoordinates(event.latLng, latInput, lngInput);
+  });
+
+  qivoMapMarker.addListener('dragend', (event) => {
+    if (!event.latLng) {
+      return;
+    }
+    setMapCoordinates(event.latLng, latInput, lngInput);
+  });
+
+  qivoAutocomplete = new window.google.maps.places.Autocomplete(direccionInput, {
+    fields: ['formatted_address', 'geometry'],
+    componentRestrictions: { country: 'ec' },
+  });
+
+  qivoAutocomplete.addListener('place_changed', () => {
+    const place = qivoAutocomplete.getPlace();
+    if (!place || !place.geometry || !place.geometry.location) {
+      return;
     }
 
-    const quitoCenter = { lat: -0.180653, lng: -78.467834 };
+    qivoMapInstance.setCenter(place.geometry.location);
+    qivoMapInstance.setZoom(16);
+    setMapCoordinates(place.geometry.location, latInput, lngInput);
 
-    qivoMapInstance = new window.google.maps.Map(mapContainer, {
-        center: quitoCenter,
-        zoom: 13,
-        mapTypeControl: false,
-        fullscreenControl: false,
-        streetViewControl: false,
-    });
+    if (place.formatted_address) {
+      direccionInput.value = place.formatted_address;
+    }
+  });
 
-    qivoMapMarker = new window.google.maps.Marker({
-        map: qivoMapInstance,
-        position: quitoCenter,
-        draggable: true,
-        title: 'Punto de retiro',
-    });
+  direccionInput.addEventListener('input', () => {
+    const query = direccionInput.value.trim();
 
-    setMapCoordinates(qivoMapMarker.getPosition(), direccionInput, latitudInput, longitudInput);
+    if (qivoTypingTimer) {
+      clearTimeout(qivoTypingTimer);
+    }
 
-    qivoMapInstance.addListener('click', function(event) {
-        if (!event.latLng) {
+    if (query.length < 5) {
+      return;
+    }
+
+    qivoTypingTimer = setTimeout(() => {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ec&q=${encodeURIComponent(query)}`;
+
+      fetch(url, { headers: { 'Accept-Language': 'es' } })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!Array.isArray(data) || !data[0]) {
             return;
-        }
+          }
 
-        setMapCoordinates(event.latLng, direccionInput, latitudInput, longitudInput);
-    });
+          const lat = parseFloat(data[0].lat);
+          const lng = parseFloat(data[0].lon);
 
-    qivoMapMarker.addListener('dragend', function(event) {
-        if (!event.latLng) {
+          if (!isFinite(lat) || !isFinite(lng)) {
             return;
-        }
+          }
 
-        setMapCoordinates(event.latLng, direccionInput, latitudInput, longitudInput);
-    });
-
-    qivoAutocomplete = new window.google.maps.places.Autocomplete(direccionInput, {
-        fields: ['formatted_address', 'geometry', 'name'],
-        componentRestrictions: { country: 'ec' },
-    });
-
-    qivoAutocomplete.addListener('place_changed', function() {
-        const place = qivoAutocomplete.getPlace();
-
-        if (!place || !place.geometry || !place.geometry.location) {
-            return;
-        }
-
-        const location = place.geometry.location;
-        qivoMapInstance.setCenter(location);
-        qivoMapInstance.setZoom(16);
-        setMapCoordinates(location, direccionInput, latitudInput, longitudInput);
-
-        if (place.formatted_address) {
-            direccionInput.value = place.formatted_address;
-        }
-    });
-
-    direccionInput.addEventListener('input', function() {
-        const query = direccionInput.value.trim();
-
-        if (qivoTypingGeocodeTimer) {
-            clearTimeout(qivoTypingGeocodeTimer);
-        }
-
-        if (query.length < 5) {
-            return;
-        }
-
-        qivoTypingGeocodeTimer = setTimeout(function() {
-            const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ec&q=' + encodeURIComponent(query);
-
-            fetch(url, { headers: { 'Accept-Language': 'es' } })
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    if (!Array.isArray(data) || !data[0]) {
-                        return;
-                    }
-
-                    const lat = parseFloat(data[0].lat);
-                    const lng = parseFloat(data[0].lon);
-
-                    if (!isFinite(lat) || !isFinite(lng)) {
-                        return;
-                    }
-
-                    const latLng = new window.google.maps.LatLng(lat, lng);
-                    qivoMapInstance.setCenter(latLng);
-                    qivoMapInstance.setZoom(16);
-                    setMapCoordinates(latLng, direccionInput, latitudInput, longitudInput);
-                })
-                .catch(function() {});
-        }, 600);
-    });
-
-    window.qivoRefreshMap = function() {
-        if (!qivoMapInstance || !qivoMapMarker) {
-            return;
-        }
-
-        window.google.maps.event.trigger(qivoMapInstance, 'resize');
-        qivoMapInstance.setCenter(qivoMapMarker.getPosition());
-    };
+          const latLng = new window.google.maps.LatLng(lat, lng);
+          qivoMapInstance.setCenter(latLng);
+          qivoMapInstance.setZoom(16);
+          setMapCoordinates(latLng, latInput, lngInput);
+        })
+        .catch(() => {});
+    }, 600);
+  });
 };
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Selección de tarjetas y modal
-    const serviceCards = document.querySelectorAll('.service-card');
-    const modal = document.getElementById('modal-solicitud');
-    const closeModal = document.querySelector('.close-modal');
-    const telefonoInput = document.getElementById('telefono');
-    const telefonoError = document.getElementById('telefono-error');
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) {
+    return;
+  }
 
-    function updatePhoneValidation(showWhenEmpty) {
-        if (!telefonoInput) {
-            return true;
-        }
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
 
-        const phoneValue = telefonoInput.value.trim();
-        const length = phoneValue.length;
+document.addEventListener('DOMContentLoaded', () => {
+  registerServiceWorker();
 
-        if (!showWhenEmpty && length === 0) {
-            telefonoInput.setCustomValidity('');
-            telefonoInput.classList.remove('input-error');
-            if (telefonoError) {
-                telefonoError.textContent = '';
-                telefonoError.style.display = 'none';
-            }
-            return false;
-        }
-
-        if (length !== 10) {
-            const faltan = Math.max(0, 10 - length);
-            const message = faltan > 0
-                ? `El teléfono debe tener 10 dígitos. Faltan ${faltan}.`
-                : 'El teléfono debe tener exactamente 10 dígitos numéricos.';
-
-            telefonoInput.setCustomValidity(message);
-            telefonoInput.classList.add('input-error');
-
-            if (telefonoError) {
-                telefonoError.textContent = message;
-                telefonoError.style.display = 'block';
-            }
-            return false;
-        }
-
-        telefonoInput.setCustomValidity('');
-        telefonoInput.classList.remove('input-error');
-        if (telefonoError) {
-            telefonoError.textContent = '';
-            telefonoError.style.display = 'none';
-        }
-        return true;
-    }
-
-    if (telefonoInput) {
-        telefonoInput.addEventListener('input', function() {
-            const digitsOnly = telefonoInput.value.replace(/\D/g, '').slice(0, 10);
-            telefonoInput.value = digitsOnly;
-            updatePhoneValidation(false);
-        });
-
-        telefonoInput.addEventListener('blur', function() {
-            updatePhoneValidation(true);
-        });
-    }
-
-    // Mostrar modal al hacer clic en una tarjeta
-    // --- Personalización de label de dirección según servicio ---
-    const direccionLabel = document.querySelector('label[for="direccion"]');
-    const direccionInput = document.getElementById('direccion');
-    let servicioActual = '';
-    serviceCards.forEach(card => {
-        card.addEventListener('click', () => {
-            // Detectar tipo de servicio
-            const esAeropuertoVuelta = card.classList.contains('aeropuerto-vuelta');
-            servicioActual = esAeropuertoVuelta ? 'aeropuerto-vuelta' : 'otro';
-            if (direccionLabel) {
-                if (esAeropuertoVuelta) {
-                    direccionLabel.textContent = 'Dirección Destino';
-                    if (direccionInput) direccionInput.placeholder = 'Dirección Destino';
-                } else {
-                    direccionLabel.textContent = 'Dirección de Recogida';
-                    if (direccionInput) direccionInput.placeholder = 'Dirección de Recogida';
-                }
-            }
-            if (modal) {
-                modal.classList.add('active');
-                modal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-                if (typeof window.qivoRefreshMap === 'function') {
-                    setTimeout(function() {
-                        window.qivoRefreshMap();
-                    }, 120);
-                }
-            }
-        });
+  document.querySelectorAll('[data-enter-mode]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const mode = button.dataset.enterMode;
+      setMode(mode);
     });
+  });
 
-    // Cerrar modal
-    if (closeModal) {
-        closeModal.addEventListener('click', () => {
-            if (modal) {
-                modal.classList.remove('active');
-                modal.style.display = 'none';
-                document.body.style.overflow = '';
-            }
-        });
-    }
-
-    // Cerrar modal al hacer clic fuera del contenido
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                modal.classList.remove('active');
-                modal.style.display = 'none';
-                document.body.style.overflow = '';
-            }
-        });
-    }
-
-    // Cerrar modal con Escape
-    window.addEventListener('keydown', function(e) {
-        if (modal && e.key === 'Escape' && modal.classList.contains('active')) {
-            modal.classList.remove('active');
-            modal.style.display = 'none';
-            document.body.style.overflow = '';
-        }
+  document.querySelectorAll('[data-switch-mode]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const mode = button.dataset.switchMode;
+      setMode(mode);
     });
+  });
 
-    // --- Mostrar información del vehículo según conductor ---
-    const selectConductor = document.getElementById('conductor');
-    const infoVehiculo = document.getElementById('info-vehiculo');
-    // Datos de vehículos por conductor
-    const vehiculos = {
-        'Ramon Bolivar': {
-            Placa: 'PDQ-1328',
-            Modelo: 'Chevrolet Beat',
-            Color: 'Plateado',
-            Whatsapp: '593999893971'
-        }
-    };
+  document.querySelectorAll('[data-nav-root]').forEach((nav) => {
+    const mode = nav.dataset.navRoot;
+    nav.querySelectorAll('.nav-item').forEach((item) => {
+      item.addEventListener('click', () => {
+        setTab(mode, item.dataset.tabTarget);
+      });
+    });
+  });
 
-    if (selectConductor && infoVehiculo) {
-        selectConductor.addEventListener('change', function() {
-            const value = selectConductor.value;
-            if (vehiculos[value]) {
-                infoVehiculo.innerHTML =
-                    `<strong>Información de Vehículo:</strong><br><br>` +
-                    `<strong>Placa:</strong> ${vehiculos[value].Placa}<br>` +
-                    `<strong>Modelo:</strong> ${vehiculos[value].Modelo}<br>` +
-                    `<strong>Color:</strong> ${vehiculos[value].Color}`;
-                infoVehiculo.style.display = 'block';
-            } else {
-                infoVehiculo.innerHTML = '';
-                infoVehiculo.style.display = 'none';
-            }
-        });
-    }
+  const phoneInput = document.getElementById('telefono');
+  const phoneError = document.getElementById('telefono-error');
+  if (phoneInput) {
+    phoneInput.addEventListener('input', () => {
+      validatePhone(phoneInput, phoneError);
+    });
+  }
 
-    // --- Enviar datos a WhatsApp ---
-    const formSolicitud = document.getElementById('form-solicitud');
-    const latitudInput = document.getElementById('latitud');
-    const longitudInput = document.getElementById('longitud');
-    if (formSolicitud) {
-        formSolicitud.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const nombre = document.getElementById('nombre').value;
-            const apellido = document.getElementById('apellido').value;
-            const telefono = document.getElementById('telefono').value;
-            const correo = document.getElementById('correo').value;
-            const direccion = document.getElementById('direccion').value;
-            const fecha = document.getElementById('fecha').value;
-            const hora = document.getElementById('hora').value;
-            const conductor = selectConductor.value;
-            const latitud = latitudInput ? latitudInput.value : '';
-            const longitud = longitudInput ? longitudInput.value : '';
-            const vehiculo = vehiculos[conductor];
+  const form = document.getElementById('request-form');
+  const feedback = document.getElementById('request-feedback');
 
-            if (!updatePhoneValidation(true)) {
-                telefonoInput.focus();
-                return;
-            }
+  if (form) {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
 
-            if (!vehiculo) {
-                alert('Selecciona un conductor válido.');
-                return;
-            }
-            // Mensaje para WhatsApp
-            let direccionLabelTexto = 'Dirección de recogida';
-            if (servicioActual === 'aeropuerto-vuelta') {
-                direccionLabelTexto = 'Dirección destino';
-            }
-            const mensaje =
-                `*Solicitud de viaje Qivo*%0A` +
-                `Nombre: ${nombre} ${apellido}%0A` +
-                `Teléfono: ${telefono}%0A` +
-                `Correo: ${correo}%0A` +
-                `${direccionLabelTexto}: ${direccion}%0A` +
-                `Ubicación GPS: ${latitud && longitud ? `${latitud}, ${longitud}` : 'No seleccionada'}%0A` +
-                `Fecha: ${fecha}%0A` +
-                `Hora: ${hora}%0A` +
-                `Conductor: ${conductor}%0A` +
-                `Vehículo: ${vehiculo.Modelo} (${vehiculo.Placa}, ${vehiculo.Color})`;
-            const url = `https://wa.me/${vehiculo.Whatsapp}?text=${mensaje}`;
-            window.open(url, '_blank');
-            // Limpiar formulario y ocultar info vehículo
-            formSolicitud.reset();
-            if (direccionLabel) {
-                direccionLabel.textContent = 'Dirección de Recogida';
-                if (direccionInput) direccionInput.placeholder = 'Dirección de Recogida';
-            }
-            servicioActual = '';
-            if (infoVehiculo) {
-                infoVehiculo.innerHTML = '';
-                infoVehiculo.style.display = 'none';
-            }
+      if (!validatePhone(phoneInput, phoneError)) {
+        phoneInput.focus();
+        return;
+      }
 
-            if (latitudInput) {
-                latitudInput.value = '';
-            }
+      const formData = new FormData(form);
+      const request = {
+        id: Date.now(),
+        servicio: String(formData.get('servicio') || ''),
+        nombre: String(formData.get('nombre') || '').trim(),
+        apellido: String(formData.get('apellido') || '').trim(),
+        telefono: String(formData.get('telefono') || '').trim(),
+        direccion: String(formData.get('direccion') || '').trim(),
+        fecha: String(formData.get('fecha') || ''),
+        hora: String(formData.get('hora') || ''),
+        conductor: String(formData.get('conductor') || ''),
+        latitud: String(formData.get('latitud') || ''),
+        longitud: String(formData.get('longitud') || ''),
+        createdAt: new Date().toISOString(),
+      };
 
-            if (longitudInput) {
-                longitudInput.value = '';
-            }
-        });
-    }
-    console.log('APP Qivo cargada');
+      const requests = getRequests();
+      requests.push(request);
+      saveRequests(requests);
+
+      localStorage.setItem(STORAGE_PASSENGER_PROFILE, JSON.stringify({
+        name: `${request.nombre} ${request.apellido}`.trim(),
+        phone: request.telefono,
+      }));
+
+      refreshPassengerProfile();
+      renderDriverRequests();
+
+      form.reset();
+      if (feedback) {
+        feedback.textContent = 'Solicitud enviada correctamente. El conductor la verá en su panel.';
+        feedback.classList.add('ok');
+      }
+    });
+  }
+
+  document.getElementById('logout-passenger')?.addEventListener('click', logout);
+  document.getElementById('logout-driver')?.addEventListener('click', logout);
+
+  const savedMode = localStorage.getItem(STORAGE_SESSION);
+  if (savedMode === 'passenger' || savedMode === 'driver') {
+    setMode(savedMode);
+  } else {
+    setActiveScreen('auth-view');
+  }
 });

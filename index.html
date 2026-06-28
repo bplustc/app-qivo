@@ -4,137 +4,194 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Qivo | Traslados en Quito desde y hacia el Aeropuerto</title>
-    <meta name="description" content="Traslados seguros en Quito y hacia/desde el aeropuerto. Reserva tu viaje con conductores confiables y atención personalizada. Qivo, Quito en Movimiento.">
-    <meta name="keywords" content="Quito, aeropuerto, traslados, taxi, transporte, viajes, conductor, reserva, Ecuador, Qivo">
-    <meta name="author" content="Qivo">
-    <meta name="theme-color" content="#34d399">
-    <meta name="application-name" content="Qivo">
+    <meta name="description" content="App web de Qivo para solicitar traslados en Quito y hacia/desde el aeropuerto en modo pasajero o conductor.">
     <meta name="robots" content="index, follow">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Qivo">
-    <meta property="og:title" content="Qivo | Traslados en Quito desde y hacia el Aeropuerto">
-    <meta property="og:description" content="Reserva traslados en Quito y hacia/desde el aeropuerto con atención personalizada y conductores confiables.">
-    <meta property="og:url" content="https://qivo-ec.com/">
-    <meta property="og:image" content="https://qivo-ec.com/Images/logo-qivo.png">
-    <meta property="og:locale" content="es_EC">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Qivo | Traslados en Quito desde y hacia el Aeropuerto">
-    <meta name="twitter:description" content="Traslados seguros en Quito y al aeropuerto. Reserva en minutos con Qivo.">
-    <meta name="twitter:image" content="https://qivo-ec.com/Images/logo-qivo.png">
+    <meta name="theme-color" content="#0f172a">
     <link rel="canonical" href="https://qivo-ec.com/">
+    <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="Images/logo-qivo.png">
     <link rel="apple-touch-icon" href="Images/logo-qivo.png">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="mobile-only-overlay" role="alert" aria-live="polite">
-        <div class="mobile-only-box">
-            <h2>Disponible solo en móvil</h2>
-            <p>Por ahora Qivo está optimizado para dispositivos móviles. Abre esta página desde tu teléfono para continuar.</p>
-        </div>
-    </div>
-    
-    <header class="main-header">
-        <div class="header-row">
-                <a href="/" class="logo-link" style="display:inline-flex;align-items:center;text-decoration:none;">
-                    <img src="Images/logo-qivo.png" alt="Logo Qivo - Traslados Quito y Aeropuerto" class="icono-logo-qivo" />
-                </a>
+    <div id="app-shell">
+        <section id="auth-view" class="screen is-active" aria-label="Acceso de modo">
+            <header class="app-header">
+                <img src="Images/logo-qivo.png" alt="Qivo" class="logo">
                 <h1>Qivo</h1>
-        </div>
-        <h2>Quito en Movimiento</h2>
-    </header>
+                <p>Elige como deseas ingresar</p>
+            </header>
 
-    <div class="main-content-center">
-        <div class="services-container">
-            <div class="service-card aeropuerto-ida" data-service="Hacia el Aeropuerto">
-                <div class="service-icon aeropuerto-ida-icon">
-                    <img src="Images/despegar.png" alt="Traslado Hacia el Aeropuerto" />
+            <main class="content">
+                <div class="mode-grid">
+                    <button class="mode-card" data-enter-mode="passenger" type="button">
+                        <span class="mode-icon">🚕</span>
+                        <strong>Modo Pasajero</strong>
+                        <small>Solicita tus viajes</small>
+                    </button>
+                    <button class="mode-card" data-enter-mode="driver" type="button">
+                        <span class="mode-icon">🛞</span>
+                        <strong>Modo Conductor</strong>
+                        <small>Gestiona tus solicitudes</small>
+                    </button>
                 </div>
-                <div class="service-name">Hacia el Aeropuerto</div>
-            </div>
-            <div class="service-card aeropuerto-vuelta" data-service="Desde el Aeropuerto">
-                <div class="service-icon aeropuerto-vuelta-icon">
-                    <img src="Images/aterrizaje.png" alt="Traslado Desde el Aeropuerto" />
+            </main>
+
+            <nav class="bottom-nav single" aria-label="Navegación inicial">
+                <button type="button" class="nav-item is-active" aria-current="page">
+                    <span>🔁</span>
+                    <small>Modo</small>
+                </button>
+            </nav>
+        </section>
+
+        <section id="passenger-view" class="screen" aria-label="Modo pasajero">
+            <header class="app-header compact">
+                <div>
+                    <h2>Qivo Pasajero</h2>
+                    <p>Reserva tu traslado en minutos</p>
                 </div>
-                <div class="service-name">Desde el Aeropuerto</div>
-            </div>
-        </div>
+            </header>
+
+            <main class="content tab-content" id="passenger-tabs">
+                <section class="tab-panel is-active" data-tab-panel="home">
+                    <article class="panel-card">
+                        <h3>Nueva solicitud</h3>
+                        <form id="request-form" novalidate>
+                            <label>Servicio
+                                <select name="servicio" required>
+                                    <option value="">Selecciona</option>
+                                    <option value="Hacia el Aeropuerto">Hacia el Aeropuerto</option>
+                                    <option value="Desde el Aeropuerto">Desde el Aeropuerto</option>
+                                </select>
+                            </label>
+                            <label>Nombre
+                                <input type="text" name="nombre" required>
+                            </label>
+                            <label>Apellido
+                                <input type="text" name="apellido" required>
+                            </label>
+                            <label>Teléfono
+                                <input type="tel" id="telefono" name="telefono" maxlength="10" inputmode="numeric" required>
+                                <small id="telefono-error" class="form-error" style="display:none;"></small>
+                            </label>
+                            <label>Dirección
+                                <input type="text" id="direccion" name="direccion" placeholder="Escribe tu dirección" required>
+                            </label>
+                            <div id="qivo-map" class="qivo-map" aria-label="Mapa de ubicación"></div>
+                            <input type="hidden" id="latitud" name="latitud">
+                            <input type="hidden" id="longitud" name="longitud">
+                            <label>Fecha
+                                <input type="date" name="fecha" required>
+                            </label>
+                            <label>Hora
+                                <input type="time" name="hora" required>
+                            </label>
+                            <label>Conductor
+                                <select name="conductor" required>
+                                    <option value="">Selecciona</option>
+                                    <option value="Ramon Bolivar">Ramón Bolívar</option>
+                                </select>
+                            </label>
+                            <button class="btn-main" type="submit">Enviar solicitud</button>
+                            <p id="request-feedback" class="feedback" aria-live="polite"></p>
+                        </form>
+                    </article>
+                </section>
+
+                <section class="tab-panel" data-tab-panel="mode">
+                    <article class="panel-card centered">
+                        <h3>Cambiar a modo conductor</h3>
+                        <p>Puedes visualizar y gestionar solicitudes como conductor.</p>
+                        <button class="btn-main" type="button" data-switch-mode="driver">Cambiar a Conductor</button>
+                    </article>
+                </section>
+
+                <section class="tab-panel" data-tab-panel="profile">
+                    <article class="panel-card">
+                        <h3>Perfil del Pasajero</h3>
+                        <div class="profile-grid">
+                            <p><strong>Nombre:</strong> <span id="profile-passenger-name">Sin definir</span></p>
+                            <p><strong>Teléfono:</strong> <span id="profile-passenger-phone">Sin definir</span></p>
+                            <p><strong>Uso frecuente:</strong> Traslados aeropuerto</p>
+                        </div>
+                        <button class="btn-ghost" type="button" id="logout-passenger">Cerrar sesión</button>
+                    </article>
+                </section>
+            </main>
+
+            <nav class="bottom-nav" data-nav-root="passenger" aria-label="Navegación pasajero">
+                <button type="button" class="nav-item is-active" data-tab-target="home">
+                    <span>🏠</span>
+                    <small>Inicio</small>
+                </button>
+                <button type="button" class="nav-item" data-tab-target="mode">
+                    <span>🔁</span>
+                    <small>Modo</small>
+                </button>
+                <button type="button" class="nav-item" data-tab-target="profile">
+                    <span>👤</span>
+                    <small>Perfil</small>
+                </button>
+            </nav>
+        </section>
+
+        <section id="driver-view" class="screen" aria-label="Modo conductor">
+            <header class="app-header compact">
+                <div>
+                    <h2>Qivo Conductor</h2>
+                    <p>Gestiona tus solicitudes asignadas</p>
+                </div>
+            </header>
+
+            <main class="content tab-content" id="driver-tabs">
+                <section class="tab-panel is-active" data-tab-panel="home">
+                    <article class="panel-card">
+                        <h3>Solicitudes recibidas</h3>
+                        <div id="driver-requests" class="request-list"></div>
+                    </article>
+                </section>
+
+                <section class="tab-panel" data-tab-panel="mode">
+                    <article class="panel-card centered">
+                        <h3>Cambiar a modo pasajero</h3>
+                        <p>Regresa al flujo de solicitud como cliente.</p>
+                        <button class="btn-main" type="button" data-switch-mode="passenger">Cambiar a Pasajero</button>
+                    </article>
+                </section>
+
+                <section class="tab-panel" data-tab-panel="profile">
+                    <article class="panel-card">
+                        <h3>Perfil del Conductor</h3>
+                        <div class="profile-grid">
+                            <p><strong>Nombre:</strong> Ramón Bolívar</p>
+                            <p><strong>Teléfono:</strong> 0999893971</p>
+                            <p><strong>Placa:</strong> PDQ-1328</p>
+                            <p><strong>Vehículo:</strong> Chevrolet Beat</p>
+                            <p><strong>Color:</strong> Plateado</p>
+                        </div>
+                        <button class="btn-ghost" type="button" id="logout-driver">Cerrar sesión</button>
+                    </article>
+                </section>
+            </main>
+
+            <nav class="bottom-nav" data-nav-root="driver" aria-label="Navegación conductor">
+                <button type="button" class="nav-item is-active" data-tab-target="home">
+                    <span>🏠</span>
+                    <small>Inicio</small>
+                </button>
+                <button type="button" class="nav-item" data-tab-target="mode">
+                    <span>🔁</span>
+                    <small>Modo</small>
+                </button>
+                <button type="button" class="nav-item" data-tab-target="profile">
+                    <span>👤</span>
+                    <small>Perfil</small>
+                </button>
+            </nav>
+        </section>
     </div>
-     <!-- Modal de Solicitud de Viaje -->
-    <div id="modal-solicitud" class="modal-solicitud" style="display:none;">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>Solicitar viaje</h2>
-            <form id="form-solicitud">
-                <div class="form-group">
-                    <label for="nombre">Nombre</label>
-                    <input type="text" id="nombre" name="nombre" required />
-                </div>
-                <div class="form-group">
-                    <label for="apellido">Apellido</label>
-                    <input type="text" id="apellido" name="apellido" required />
-                </div>
-                <div class="form-group">
-                    <label for="telefono">Teléfono</label>
-                    <input type="tel" id="telefono" name="telefono" inputmode="numeric" pattern="[0-9]{10}" minlength="10" maxlength="10" aria-describedby="telefono-error" required />
-                    <small id="telefono-error" class="form-error" style="display:none;"></small>
-                </div>
-                <div class="form-group">
-                    <label for="correo">Correo</label>
-                    <input type="email" id="correo" name="correo" required />
-                </div>
-                <div class="form-group">
-                    <label for="direccion">Dirección de Recogida</label>
-                    <input type="text" id="direccion" name="direccion" required />
-                </div>
-                <div class="form-group map-group">
-                    <label for="qivo-map">Ubicación en mapa (clic para seleccionar)</label>
-                    <div id="qivo-map" class="qivo-map" aria-label="Mapa para seleccionar el punto de retiro"></div>
-                    <small class="map-help">Al escribir en dirección el mapa se sincroniza automáticamente. También puedes tocar el mapa para ajustar el punto exacto (GPS).</small>
-                    <input type="hidden" id="latitud" name="latitud" />
-                    <input type="hidden" id="longitud" name="longitud" />
-                </div>
-                <div class="form-group">
-                    <label for="fecha">Fecha de Recogida</label>
-                    <input type="date" id="fecha" name="fecha" required />
-                </div>
-                <div class="form-group">
-                    <label for="hora">Hora de Recogida</label>
-                    <input type="time" id="hora" name="hora" required />
-                </div>
-                <div class="form-group">
-                    <label for="conductor">Nombre del Conductor</label>
-                    <select id="conductor" name="conductor" required>
-                        <option value="">Selecciona un conductor</option>
-                        <option value="Ramon Bolivar">Ramón Bolívar</option>
-                    </select>
-                </div>
-                <div id="info-vehiculo" class="vehiculo-info" style="display:none;"></div>
-                <button type="submit" class="btn-enviar">Enviar solicitud</button>
-            </form>
-        </div>
-    </div>
-    <footer class="main-footer">
-        <div>&copy; 2026 Qivo. Diseñado por <strong><a href="https://bplustc.netlify.app/" target="_blank" rel="noopener">B+ Technology</a></strong>.</div>
-    </footer>
-        <script type="application/ld+json">
-        {
-            "@context": "https://schema.org",
-            "@type": "TaxiService",
-            "name": "Qivo",
-            "url": "https://qivo-ec.com/",
-            "description": "Servicio de traslados en Quito y hacia/desde el aeropuerto con reserva rápida desde móvil.",
-            "areaServed": {
-                "@type": "City",
-                "name": "Quito"
-            },
-            "serviceType": [
-                "Traslado hacia el aeropuerto",
-                "Traslado desde el aeropuerto"
-            ],
-            "inLanguage": "es-EC"
-        }
-        </script>
+
     <script src="app.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBDRHK_S_6--zoGpg3hiGh5DeRIue9WNPE&libraries=places&callback=initQivoMap" async defer></script>
 </body>
