@@ -96,15 +96,23 @@ function showModeSelection() {
 
 function showWelcomeFlow() {
   pendingAuthMode = null;
+  const welcomeView = document.getElementById('welcome-view');
+
   setActiveScreen('welcome-view');
+  welcomeView?.classList.remove('is-exiting');
 
   if (welcomeTimer) {
     clearTimeout(welcomeTimer);
   }
 
   welcomeTimer = window.setTimeout(() => {
-    showModeSelection();
-  }, 4000);
+    welcomeView?.classList.add('is-exiting');
+
+    window.setTimeout(() => {
+      showModeSelection();
+      welcomeView?.classList.remove('is-exiting');
+    }, 2000);
+  }, 3000);
 }
 
 function getModeCopy(mode) {

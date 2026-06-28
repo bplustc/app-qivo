@@ -68,24 +68,29 @@ body {
   box-shadow: 0 20px 44px rgba(15, 23, 42, 0.12);
 }
 
+#welcome-view.is-exiting .welcome-card {
+  opacity: 0;
+  transition: opacity 2s ease;
+}
+
 .welcome-logo {
   width: 74px;
   height: 74px;
-  animation: welcome-float 4s ease-in-out infinite;
+  animation: welcome-float 3s ease-in-out infinite;
 }
 
 .welcome-title {
   margin: 12px 0 6px;
   font-size: 1.9rem;
   letter-spacing: 0.4px;
-  animation: welcome-rise 2.2s ease-out both;
+  animation: welcome-rise 2s ease-out both;
 }
 
 .welcome-subtitle {
   margin: 0 0 18px;
   color: #0f766e;
   font-weight: 600;
-  animation: welcome-rise 3s ease-out both;
+  animation: welcome-rise 2s ease-out both;
 }
 
 .login-hint {
@@ -107,11 +112,9 @@ body {
 @keyframes welcome-rise {
   0% {
     opacity: 0;
-    transform: translateY(18px);
   }
   100% {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
