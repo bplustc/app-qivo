@@ -1,4 +1,4 @@
-const CACHE_NAME = 'qivo-app-v1';
+const CACHE_NAME = 'qivo-app-v2';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -12,6 +12,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -20,6 +21,7 @@ self.addEventListener('activate', (event) => {
       keys.map((key) => (key !== CACHE_NAME ? caches.delete(key) : Promise.resolve()))
     ))
   );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {

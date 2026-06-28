@@ -269,6 +269,17 @@ function registerServiceWorker() {
     return;
   }
 
+  const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+  if (isLocalHost) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => {
+        registration.unregister();
+      });
+    });
+    return;
+  }
+
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   });
@@ -302,6 +313,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const phoneInput = document.getElementById('telefono');
   const phoneError = document.getElementById('telefono-error');
+  const serviceInput = document.getElementById('servicio');
+  const serviceButtons = document.querySelectorAll('.service-option');
+  const driverInput = document.getElementById('conductor');
+  const driverButtons = document.querySelectorAll('.driver-option');
+
+  serviceButtons.forEach((button) => {
+    if (button.classList.contains('driver-option')) {
+      return;
+    }
+
+    button.addEventListener('click', () => {
+      serviceButtons.forEach((item) => {
+        if (!item.classList.contains('driver-option')) {
+          item.classList.remove('is-active');
+        }
+      });
+      button.classList.add('is-active');
+
+      if (serviceInput) {
+        serviceInput.value = button.dataset.serviceValue || '';
+      }
+    });
+  });
+
+  driverButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      driverButtons.forEach((item) => item.classList.remove('is-active'));
+      button.classList.add('is-active');
+
+      if (driverInput) {
+        driverInput.value = button.dataset.driverValue || '';
+      }
+    });
+  });
   if (phoneInput) {
     phoneInput.addEventListener('input', () => {
       validatePhone(phoneInput, phoneError);
@@ -317,6 +362,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!validatePhone(phoneInput, phoneError)) {
         phoneInput.focus();
+        return;
+      }
+
+      if (serviceInput && !serviceInput.value.trim()) {
+        if (feedback) {
+          feedback.textContent = 'Selecciona un tipo de servicio para continuar.';
+          feedback.classList.remove('ok');
+        }
+        return;
+      }
+
+      if (driverInput && !driverInput.value.trim()) {
+        if (feedback) {
+          feedback.textContent = 'Selecciona un conductor para continuar.';
+          feedback.classList.remove('ok');
+        }
         return;
       }
 
@@ -349,6 +410,14 @@ document.addEventListener('DOMContentLoaded', () => {
       renderDriverRequests();
 
       form.reset();
+      serviceButtons.forEach((item) => item.classList.remove('is-active'));
+      driverButtons.forEach((item) => item.classList.remove('is-active'));
+      if (serviceInput) {
+        serviceInput.value = '';
+      }
+      if (driverInput) {
+        driverInput.value = '';
+      }
       if (feedback) {
         feedback.textContent = 'Solicitud enviada correctamente. El conductor la verá en su panel.';
         feedback.classList.add('ok');

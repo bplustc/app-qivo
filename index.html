@@ -58,13 +58,20 @@
                     <article class="panel-card">
                         <h3>Nueva solicitud</h3>
                         <form id="request-form" novalidate>
-                            <label>Servicio
-                                <select name="servicio" required>
-                                    <option value="">Selecciona</option>
-                                    <option value="Hacia el Aeropuerto">Hacia el Aeropuerto</option>
-                                    <option value="Desde el Aeropuerto">Desde el Aeropuerto</option>
-                                </select>
-                            </label>
+                            <div class="service-picker">
+                                <p class="service-label">Servicio</p>
+                                <div class="service-options" role="group" aria-label="Tipo de servicio">
+                                    <button type="button" class="service-option" data-service-value="Hacia el Aeropuerto">
+                                        <span class="option-title">Hacia el Aeropuerto</span>
+                                        <span class="option-subtitle">Salida desde tu ubicación</span>
+                                    </button>
+                                    <button type="button" class="service-option" data-service-value="Desde el Aeropuerto">
+                                        <span class="option-title">Desde el Aeropuerto</span>
+                                        <span class="option-subtitle">Llegada a tu destino</span>
+                                    </button>
+                                </div>
+                                <input type="hidden" name="servicio" id="servicio" value="">
+                            </div>
                             <label>Nombre
                                 <input type="text" name="nombre" required>
                             </label>
@@ -87,12 +94,16 @@
                             <label>Hora
                                 <input type="time" name="hora" required>
                             </label>
-                            <label>Conductor
-                                <select name="conductor" required>
-                                    <option value="">Selecciona</option>
-                                    <option value="Ramon Bolivar">Ramón Bolívar</option>
-                                </select>
-                            </label>
+                            <div class="service-picker">
+                                <p class="service-label">Conductor</p>
+                                <div class="driver-options" role="group" aria-label="Seleccionar conductor">
+                                    <button type="button" class="service-option driver-option" data-driver-value="Ramon Bolivar">
+                                        <span class="option-title">Ramón Bolívar</span>
+                                        <span class="option-subtitle">Chevrolet Beat · PDQ-1328</span>
+                                    </button>
+                                </div>
+                                <input type="hidden" name="conductor" id="conductor" value="">
+                            </div>
                             <button class="btn-main" type="submit">Enviar solicitud</button>
                             <p id="request-feedback" class="feedback" aria-live="polite"></p>
                         </form>
