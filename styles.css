@@ -80,7 +80,7 @@ body {
 .welcome-logo {
   width: 74px;
   height: 74px;
-  animation: welcome-float 3s ease-in-out infinite;
+  animation: welcome-float 2s ease-in-out infinite;
 }
 
 .welcome-title {

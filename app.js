@@ -5,12 +5,12 @@ const STORAGE_PASSENGER_PROFILE = 'qivo_passenger_profile';
 const PRESET_USERS = {
   passenger: {
     username: 'pasajero',
-    password: 'Qivo2026',
+    password: '1234',
     label: 'Pasajero',
   },
   driver: {
     username: 'conductor',
-    password: 'QivoConductor2026',
+    password: '1234',
     label: 'Conductor',
   },
 };
