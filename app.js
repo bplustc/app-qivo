@@ -85,13 +85,22 @@ function loginToMode(mode) {
   enterMode(mode);
 }
 
-function showModeSelection() {
+function showModeSelection(animateEntry = false) {
   pendingAuthMode = null;
   if (welcomeTimer) {
     clearTimeout(welcomeTimer);
     welcomeTimer = null;
   }
+
+  const authView = document.getElementById('auth-view');
   setActiveScreen('auth-view');
+
+  if (animateEntry && authView) {
+    authView.classList.add('is-entering');
+    window.setTimeout(() => {
+      authView.classList.remove('is-entering');
+    }, 650);
+  }
 }
 
 function showWelcomeFlow() {
@@ -109,7 +118,7 @@ function showWelcomeFlow() {
     welcomeView?.classList.add('is-exiting');
 
     window.setTimeout(() => {
-      showModeSelection();
+      showModeSelection(true);
       welcomeView?.classList.remove('is-exiting');
     }, 2000);
   }, 3000);

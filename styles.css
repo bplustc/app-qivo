@@ -73,6 +73,10 @@ body {
   transition: opacity 2s ease;
 }
 
+#auth-view.is-entering {
+  animation: auth-view-fade-in 0.65s ease both;
+}
+
 .welcome-logo {
   width: 74px;
   height: 74px;
@@ -110,6 +114,15 @@ body {
 }
 
 @keyframes welcome-rise {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes auth-view-fade-in {
   0% {
     opacity: 0;
   }
