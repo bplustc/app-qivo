@@ -15,7 +15,18 @@
 </head>
 <body>
     <div id="app-shell">
-        <section id="auth-view" class="screen is-active" aria-label="Acceso de modo">
+        <section id="welcome-view" class="screen is-active" aria-label="Pantalla de bienvenida">
+            <main class="content welcome-content">
+                <div class="welcome-card">
+                    <img src="Images/logo-qivo.png" alt="Qivo" class="logo welcome-logo">
+                    <h1 class="welcome-title">Qivo</h1>
+                    <p class="welcome-subtitle">Tu traslado seguro en Quito y Aeropuerto</p>
+                    <button id="start-flow-btn" class="btn-main" type="button">Comenzar</button>
+                </div>
+            </main>
+        </section>
+
+        <section id="auth-view" class="screen" aria-label="Acceso de modo">
             <header class="app-header">
                 <img src="Images/logo-qivo.png" alt="Qivo" class="logo">
                 <h1>Qivo</h1>
@@ -43,6 +54,31 @@
                     <small>Modo</small>
                 </button>
             </nav>
+        </section>
+
+        <section id="login-view" class="screen" aria-label="Inicio de sesión">
+            <header class="app-header">
+                <img src="Images/logo-qivo.png" alt="Qivo" class="logo">
+                <h2 id="login-title">Acceso</h2>
+                <p id="login-subtitle">Ingresa tus credenciales</p>
+            </header>
+
+            <main class="content">
+                <article class="panel-card">
+                    <form id="login-form" novalidate>
+                        <label>Usuario
+                            <input type="text" id="login-username" autocomplete="username" required>
+                        </label>
+                        <label>Contraseña
+                            <input type="password" id="login-password" autocomplete="current-password" required>
+                        </label>
+                        <p id="login-error" class="form-error" aria-live="polite" style="display:none;"></p>
+                        <p id="login-hint" class="login-hint" aria-live="polite"></p>
+                        <button class="btn-main" type="submit">Entrar</button>
+                        <button class="btn-ghost" id="back-to-mode" type="button">Volver</button>
+                    </form>
+                </article>
+            </main>
         </section>
 
         <section id="passenger-view" class="screen" aria-label="Modo pasajero">

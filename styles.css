@@ -51,6 +51,70 @@ body {
   padding: 12px 16px 90px;
 }
 
+.welcome-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 24px;
+}
+
+.welcome-card {
+  width: 100%;
+  max-width: 340px;
+  border-radius: 20px;
+  padding: 28px 18px 20px;
+  text-align: center;
+  background: linear-gradient(165deg, #ffffff 0%, #f0fdfa 100%);
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.12);
+}
+
+.welcome-logo {
+  width: 74px;
+  height: 74px;
+  animation: welcome-float 3.4s ease-in-out infinite;
+}
+
+.welcome-title {
+  margin: 12px 0 6px;
+  font-size: 1.9rem;
+  letter-spacing: 0.4px;
+  animation: welcome-rise 1.5s ease-out both;
+}
+
+.welcome-subtitle {
+  margin: 0 0 18px;
+  color: #0f766e;
+  font-weight: 600;
+  animation: welcome-rise 2.2s ease-out both;
+}
+
+.login-hint {
+  margin: 8px 0 12px;
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+@keyframes welcome-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes welcome-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .mode-grid {
   display: grid;
   gap: 12px;
@@ -188,6 +252,15 @@ label {
 }
 
 @media (max-width: 420px) {
+  .welcome-card {
+    border-radius: 16px;
+    padding: 24px 14px 18px;
+  }
+
+  .welcome-title {
+    font-size: 1.65rem;
+  }
+
   .service-option {
     padding: 11px 10px;
     border-radius: 12px;

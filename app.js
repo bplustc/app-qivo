@@ -2,10 +2,24 @@ const STORAGE_SESSION = 'qivo_session_mode';
 const STORAGE_REQUESTS = 'qivo_requests';
 const STORAGE_PASSENGER_PROFILE = 'qivo_passenger_profile';
 
+const PRESET_USERS = {
+  passenger: {
+    username: 'pasajero',
+    password: 'Qivo2026',
+    label: 'Pasajero',
+  },
+  driver: {
+    username: 'conductor',
+    password: 'QivoConductor2026',
+    label: 'Conductor',
+  },
+};
+
 let qivoMapInstance = null;
 let qivoMapMarker = null;
 let qivoAutocomplete = null;
 let qivoTypingTimer = null;
+let pendingAuthMode = null;
 
 function getRequests() {
   try {
@@ -46,9 +60,7 @@ function setTab(mode, tab) {
   }
 }
 
-function setMode(mode) {
-  localStorage.setItem(STORAGE_SESSION, mode);
-
+function enterMode(mode) {
   if (mode === 'passenger') {
     setActiveScreen('passenger-view');
     setTab('passenger', 'home');
@@ -64,13 +76,93 @@ function setMode(mode) {
     return;
   }
 
-  localStorage.removeItem(STORAGE_SESSION);
+  showModeSelection();
+}
+
+function loginToMode(mode) {
+  localStorage.setItem(STORAGE_SESSION, mode);
+  enterMode(mode);
+}
+
+function showModeSelection() {
+  pendingAuthMode = null;
   setActiveScreen('auth-view');
+}
+
+function getModeCopy(mode) {
+  if (mode === 'driver') {
+    return {
+      title: 'Acceso Conductor',
+      subtitle: 'Inicia sesion para gestionar solicitudes',
+    };
+  }
+
+  return {
+    title: 'Acceso Pasajero',
+    subtitle: 'Inicia sesion para solicitar tu traslado',
+  };
+}
+
+function openLoginForMode(mode) {
+  const profile = PRESET_USERS[mode];
+  if (!profile) {
+    return;
+  }
+
+  pendingAuthMode = mode;
+
+  const title = document.getElementById('login-title');
+  const subtitle = document.getElementById('login-subtitle');
+  const hint = document.getElementById('login-hint');
+  const error = document.getElementById('login-error');
+  const username = document.getElementById('login-username');
+  const password = document.getElementById('login-password');
+  const copy = getModeCopy(mode);
+
+  if (title) {
+    title.textContent = copy.title;
+  }
+
+  if (subtitle) {
+    subtitle.textContent = copy.subtitle;
+  }
+
+  if (hint) {
+    hint.textContent = `Credenciales demo: ${profile.username} / ${profile.password}`;
+  }
+
+  if (error) {
+    error.textContent = '';
+    error.style.display = 'none';
+  }
+
+  if (username) {
+    username.value = '';
+  }
+
+  if (password) {
+    password.value = '';
+  }
+
+  setActiveScreen('login-view');
+
+  if (username) {
+    username.focus();
+  }
+}
+
+function hasValidCredentials(mode, username, password) {
+  const profile = PRESET_USERS[mode];
+  if (!profile) {
+    return false;
+  }
+
+  return profile.username === username && profile.password === password;
 }
 
 function logout() {
   localStorage.removeItem(STORAGE_SESSION);
-  setActiveScreen('auth-view');
+  setActiveScreen('welcome-view');
 }
 
 function renderDriverRequests() {
@@ -288,19 +380,61 @@ function registerServiceWorker() {
 document.addEventListener('DOMContentLoaded', () => {
   registerServiceWorker();
 
+  document.getElementById('start-flow-btn')?.addEventListener('click', () => {
+    showModeSelection();
+  });
+
   document.querySelectorAll('[data-enter-mode]').forEach((button) => {
     button.addEventListener('click', () => {
       const mode = button.dataset.enterMode;
-      setMode(mode);
+      openLoginForMode(mode);
     });
   });
 
   document.querySelectorAll('[data-switch-mode]').forEach((button) => {
     button.addEventListener('click', () => {
       const mode = button.dataset.switchMode;
-      setMode(mode);
+      openLoginForMode(mode);
     });
   });
+
+  document.getElementById('back-to-mode')?.addEventListener('click', () => {
+    showModeSelection();
+  });
+
+  const loginForm = document.getElementById('login-form');
+  const loginUsername = document.getElementById('login-username');
+  const loginPassword = document.getElementById('login-password');
+  const loginError = document.getElementById('login-error');
+
+  if (loginForm && loginUsername && loginPassword) {
+    loginForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      if (!pendingAuthMode) {
+        showModeSelection();
+        return;
+      }
+
+      const username = loginUsername.value.trim();
+      const password = loginPassword.value.trim();
+
+      if (!hasValidCredentials(pendingAuthMode, username, password)) {
+        if (loginError) {
+          loginError.textContent = 'Usuario o contrasena incorrectos.';
+          loginError.style.display = 'block';
+        }
+        return;
+      }
+
+      if (loginError) {
+        loginError.textContent = '';
+        loginError.style.display = 'none';
+      }
+
+      loginToMode(pendingAuthMode);
+    });
+  }
 
   document.querySelectorAll('[data-nav-root]').forEach((nav) => {
     const mode = nav.dataset.navRoot;
@@ -430,8 +564,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const savedMode = localStorage.getItem(STORAGE_SESSION);
   if (savedMode === 'passenger' || savedMode === 'driver') {
-    setMode(savedMode);
+    enterMode(savedMode);
   } else {
-    setActiveScreen('auth-view');
+    setActiveScreen('welcome-view');
   }
 });
