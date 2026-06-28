@@ -129,48 +129,56 @@ label {
 }
 
 .service-option {
-  border: 1px solid #d1dce8;
-  background: linear-gradient(165deg, #ffffff 0%, #f6f9fc 100%);
-  border-radius: 16px;
-  padding: 13px 12px;
+  border: 1px solid #d8e3ef;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 12px;
   text-align: left;
   font: inherit;
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   color: #1e293b;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease,
+    background-color 0.2s ease;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   white-space: normal;
-  word-break: break-word;
+  word-break: normal;
   overflow-wrap: anywhere;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
 }
 
 .service-option.is-active {
-  border-color: #14b8a6;
-  background: linear-gradient(135deg, #14b8a6 0%, #34d399 100%);
-  color: #ffffff;
+  border-color: #0ea5a4;
+  background: #f0fdfa;
+  color: #0f172a;
   font-weight: 700;
-  box-shadow: 0 8px 20px rgba(20, 184, 166, 0.28);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(20, 184, 166, 0.2);
 }
 
 .option-title {
   font-weight: 700;
-  line-height: 1.2;
-  font-size: 0.86rem;
+  line-height: 1.25;
+  font-size: 0.88rem;
 }
 
 .option-subtitle {
-  font-size: 0.72rem;
-  color: #64748b;
-  line-height: 1.2;
+  font-size: 0.75rem;
+  color: #475569;
+  line-height: 1.28;
 }
 
 .service-option.is-active .option-subtitle {
-  color: rgba(255, 255, 255, 0.92);
+  color: #0f766e;
+}
+
+.service-option:hover {
+  border-color: #b9cbe0;
 }
 
 @media (min-width: 640px) {
@@ -181,15 +189,63 @@ label {
 
 @media (max-width: 420px) {
   .service-option {
-    padding: 12px 10px;
+    padding: 11px 10px;
+    border-radius: 12px;
+    box-shadow: 0 1px 6px rgba(15, 23, 42, 0.04);
   }
 
   .option-title {
-    font-size: 0.83rem;
+    font-size: 0.84rem;
   }
 
   .option-subtitle {
+    font-size: 0.73rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .service-picker {
+    margin-bottom: 10px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .service-options,
+  .driver-options {
+    grid-template-columns: 1fr;
+    gap: 7px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .service-option {
+    width: 100%;
+    max-width: 100%;
+    display: block;
+    padding: 10px 11px;
+  }
+
+  .service-option .option-title,
+  .service-option .option-subtitle {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-wrap: break-word;
+  }
+
+  .service-option .option-title {
+    font-size: 0.82rem;
+    margin-bottom: 2px;
+  }
+
+  .service-option .option-subtitle {
     font-size: 0.7rem;
+    line-height: 1.22;
+  }
+
+  .service-option.is-active {
+    border-color: #0d9488;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
   }
 }
 
