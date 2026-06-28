@@ -20,7 +20,7 @@ let qivoMapMarker = null;
 let qivoAutocomplete = null;
 let qivoTypingTimer = null;
 let pendingAuthMode = null;
-let authTransitionTimer = null;
+let welcomeTimer = null;
 
 function getRequests() {
   try {
@@ -82,12 +82,29 @@ function enterMode(mode) {
 
 function loginToMode(mode) {
   localStorage.setItem(STORAGE_SESSION, mode);
-  showAuthTransition(mode);
+  enterMode(mode);
 }
 
 function showModeSelection() {
   pendingAuthMode = null;
+  if (welcomeTimer) {
+    clearTimeout(welcomeTimer);
+    welcomeTimer = null;
+  }
   setActiveScreen('auth-view');
+}
+
+function showWelcomeFlow() {
+  pendingAuthMode = null;
+  setActiveScreen('welcome-view');
+
+  if (welcomeTimer) {
+    clearTimeout(welcomeTimer);
+  }
+
+  welcomeTimer = window.setTimeout(() => {
+    showModeSelection();
+  }, 4000);
 }
 
 function getModeCopy(mode) {
@@ -161,28 +178,9 @@ function hasValidCredentials(mode, username, password) {
   return profile.username === username && profile.password === password;
 }
 
-function showAuthTransition(mode) {
-  const subtitle = document.getElementById('validating-subtitle');
-  const userType = PRESET_USERS[mode]?.label || 'Usuario';
-
-  if (subtitle) {
-    subtitle.textContent = `Verificando cuenta de ${userType}...`;
-  }
-
-  setActiveScreen('validating-view');
-
-  if (authTransitionTimer) {
-    clearTimeout(authTransitionTimer);
-  }
-
-  authTransitionTimer = window.setTimeout(() => {
-    enterMode(mode);
-  }, 1200);
-}
-
 function logout() {
   localStorage.removeItem(STORAGE_SESSION);
-  setActiveScreen('welcome-view');
+  showWelcomeFlow();
 }
 
 function renderDriverRequests() {
@@ -400,10 +398,6 @@ function registerServiceWorker() {
 document.addEventListener('DOMContentLoaded', () => {
   registerServiceWorker();
 
-  document.getElementById('start-flow-btn')?.addEventListener('click', () => {
-    showModeSelection();
-  });
-
   document.querySelectorAll('[data-enter-mode]').forEach((button) => {
     button.addEventListener('click', () => {
       const mode = button.dataset.enterMode;
@@ -582,10 +576,5 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('logout-passenger')?.addEventListener('click', logout);
   document.getElementById('logout-driver')?.addEventListener('click', logout);
 
-  const savedMode = localStorage.getItem(STORAGE_SESSION);
-  if (savedMode === 'passenger' || savedMode === 'driver') {
-    enterMode(savedMode);
-  } else {
-    setActiveScreen('welcome-view');
-  }
+  showWelcomeFlow();
 });
