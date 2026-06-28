@@ -20,6 +20,7 @@ let qivoMapMarker = null;
 let qivoAutocomplete = null;
 let qivoTypingTimer = null;
 let pendingAuthMode = null;
+let authTransitionTimer = null;
 
 function getRequests() {
   try {
@@ -81,7 +82,7 @@ function enterMode(mode) {
 
 function loginToMode(mode) {
   localStorage.setItem(STORAGE_SESSION, mode);
-  enterMode(mode);
+  showAuthTransition(mode);
 }
 
 function showModeSelection() {
@@ -158,6 +159,25 @@ function hasValidCredentials(mode, username, password) {
   }
 
   return profile.username === username && profile.password === password;
+}
+
+function showAuthTransition(mode) {
+  const subtitle = document.getElementById('validating-subtitle');
+  const userType = PRESET_USERS[mode]?.label || 'Usuario';
+
+  if (subtitle) {
+    subtitle.textContent = `Verificando cuenta de ${userType}...`;
+  }
+
+  setActiveScreen('validating-view');
+
+  if (authTransitionTimer) {
+    clearTimeout(authTransitionTimer);
+  }
+
+  authTransitionTimer = window.setTimeout(() => {
+    enterMode(mode);
+  }, 1200);
 }
 
 function logout() {

@@ -94,6 +94,33 @@ body {
   color: #475569;
 }
 
+.validating-card {
+  max-width: 320px;
+  padding-top: 30px;
+  padding-bottom: 24px;
+}
+
+.auth-spinner {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  border: 4px solid #d1fae5;
+  border-top-color: #0d9488;
+  animation: auth-spin 1s linear infinite;
+}
+
+.validating-title {
+  margin: 0 0 8px;
+  color: #0f172a;
+}
+
+.validating-subtitle {
+  margin: 0;
+  color: #0f766e;
+  font-weight: 600;
+}
+
 @keyframes welcome-float {
   0%,
   100% {
@@ -112,6 +139,15 @@ body {
   100% {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes auth-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 
