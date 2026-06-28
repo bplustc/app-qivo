@@ -1,6 +1,7 @@
 const STORAGE_SESSION = 'qivo_session_mode';
 const STORAGE_REQUESTS = 'qivo_requests';
 const STORAGE_PASSENGER_PROFILE = 'qivo_passenger_profile';
+const SCREEN_TRANSITION_MS = 750;
 
 const PRESET_USERS = {
   passenger: {
@@ -21,6 +22,7 @@ let qivoAutocomplete = null;
 let qivoTypingTimer = null;
 let pendingAuthMode = null;
 let welcomeTimer = null;
+let screenTransitionCleanupTimer = null;
 
 function getRequests() {
   try {
@@ -37,9 +39,41 @@ function saveRequests(requests) {
 }
 
 function setActiveScreen(screenId) {
-  document.querySelectorAll('.screen').forEach((screen) => {
-    screen.classList.toggle('is-active', screen.id === screenId);
-  });
+  const nextScreen = document.getElementById(screenId);
+  if (!nextScreen) {
+    return;
+  }
+
+  const currentScreen = document.querySelector('.screen.is-active:not(.is-leaving)');
+
+  if (currentScreen && currentScreen.id === screenId) {
+    return;
+  }
+
+  if (screenTransitionCleanupTimer) {
+    clearTimeout(screenTransitionCleanupTimer);
+    screenTransitionCleanupTimer = null;
+  }
+
+  if (!currentScreen) {
+    document.querySelectorAll('.screen').forEach((screen) => {
+      screen.classList.remove('is-active', 'is-entering', 'is-leaving');
+    });
+
+    nextScreen.classList.add('is-active', 'is-entering');
+    screenTransitionCleanupTimer = window.setTimeout(() => {
+      nextScreen.classList.remove('is-entering');
+    }, SCREEN_TRANSITION_MS);
+    return;
+  }
+
+  currentScreen.classList.add('is-leaving');
+  nextScreen.classList.add('is-active', 'is-entering');
+
+  screenTransitionCleanupTimer = window.setTimeout(() => {
+    currentScreen.classList.remove('is-active', 'is-leaving');
+    nextScreen.classList.remove('is-entering');
+  }, SCREEN_TRANSITION_MS);
 }
 
 function setTab(mode, tab) {
@@ -85,42 +119,25 @@ function loginToMode(mode) {
   enterMode(mode);
 }
 
-function showModeSelection(animateEntry = false) {
+function showModeSelection() {
   pendingAuthMode = null;
   if (welcomeTimer) {
     clearTimeout(welcomeTimer);
     welcomeTimer = null;
   }
-
-  const authView = document.getElementById('auth-view');
   setActiveScreen('auth-view');
-
-  if (animateEntry && authView) {
-    authView.classList.add('is-entering');
-    window.setTimeout(() => {
-      authView.classList.remove('is-entering');
-    }, 650);
-  }
 }
 
 function showWelcomeFlow() {
   pendingAuthMode = null;
-  const welcomeView = document.getElementById('welcome-view');
-
   setActiveScreen('welcome-view');
-  welcomeView?.classList.remove('is-exiting');
 
   if (welcomeTimer) {
     clearTimeout(welcomeTimer);
   }
 
   welcomeTimer = window.setTimeout(() => {
-    welcomeView?.classList.add('is-exiting');
-
-    window.setTimeout(() => {
-      showModeSelection(true);
-      welcomeView?.classList.remove('is-exiting');
-    }, 2000);
+    showModeSelection();
   }, 3000);
 }
 

@@ -9,14 +9,35 @@ body {
   color: #0f172a;
 }
 
+#app-shell {
+  position: relative;
+  min-height: 100dvh;
+}
+
 .screen {
   min-height: 100dvh;
   display: none;
   flex-direction: column;
+  opacity: 0;
 }
 
 .screen.is-active {
   display: flex;
+  opacity: 1;
+}
+
+.screen.is-entering {
+  animation: screen-fade-in 0.75s ease both;
+  z-index: 10;
+}
+
+.screen.is-leaving {
+  display: flex;
+  position: absolute;
+  inset: 0;
+  animation: screen-fade-out 0.75s ease both;
+  pointer-events: none;
+  z-index: 20;
 }
 
 .app-header {
@@ -68,15 +89,6 @@ body {
   box-shadow: 0 20px 44px rgba(15, 23, 42, 0.12);
 }
 
-#welcome-view.is-exiting .welcome-card {
-  opacity: 0;
-  transition: opacity 2s ease;
-}
-
-#auth-view.is-entering {
-  animation: auth-view-fade-in 0.65s ease both;
-}
-
 .welcome-logo {
   width: 74px;
   height: 74px;
@@ -122,12 +134,21 @@ body {
   }
 }
 
-@keyframes auth-view-fade-in {
+@keyframes screen-fade-in {
   0% {
     opacity: 0;
   }
   100% {
     opacity: 1;
+  }
+}
+
+@keyframes screen-fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
