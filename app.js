@@ -28,6 +28,7 @@ let pendingAuthMode = null;
 let welcomeTimer = null;
 let screenTransitionCleanupTimer = null;
 let hasInitializedFlow = false;
+const MIN_RECOMMENDED_BALANCE = 5;
 
 function formatUsd(value) {
   return `$${Number(value || 0).toFixed(2)}`;
@@ -59,6 +60,67 @@ function saveLocalDriverWallet(state) {
   localStorage.setItem(STORAGE_DRIVER_WALLET, JSON.stringify(state));
 }
 
+function isSameLocalDay(dateA, dateB) {
+  return dateA.getFullYear() === dateB.getFullYear()
+    && dateA.getMonth() === dateB.getMonth()
+    && dateA.getDate() === dateB.getDate();
+}
+
+function calculateFinanceMetrics(state) {
+  const today = new Date();
+  let servicesToday = 0;
+  let totalFeesToday = 0;
+
+  state.movements.forEach((item) => {
+    if (!item || !item.date) {
+      return;
+    }
+
+    const movementDate = new Date(item.date);
+    if (!isSameLocalDay(movementDate, today)) {
+      return;
+    }
+
+    const amount = Number(item.amount || 0);
+    const type = item.type || '';
+    const isServiceFee = type === 'service_fee' || amount < 0;
+
+    if (isServiceFee) {
+      servicesToday += 1;
+      totalFeesToday += Math.abs(amount);
+    }
+  });
+
+  return {
+    servicesToday,
+    totalFeesToday: Number(totalFeesToday.toFixed(2)),
+  };
+}
+
+function renderFinanceMetrics(state) {
+  const servicesTodayTarget = document.getElementById('finance-services-today');
+  const totalFeesTarget = document.getElementById('finance-total-fees');
+  const minBalanceTarget = document.getElementById('finance-min-balance');
+  const minBalanceCard = document.getElementById('finance-min-balance-card');
+  const metrics = calculateFinanceMetrics(state);
+
+  if (servicesTodayTarget) {
+    servicesTodayTarget.textContent = String(metrics.servicesToday);
+  }
+
+  if (totalFeesTarget) {
+    totalFeesTarget.textContent = formatUsd(metrics.totalFeesToday);
+  }
+
+  if (minBalanceTarget) {
+    minBalanceTarget.textContent = formatUsd(MIN_RECOMMENDED_BALANCE);
+  }
+
+  if (minBalanceCard) {
+    minBalanceCard.classList.toggle('is-warning', Number(state.balance || 0) < MIN_RECOMMENDED_BALANCE);
+  }
+}
+
 function mapMovementLabel(type) {
   if (type === 'topup') {
     return 'Recarga con tarjeta';
@@ -87,6 +149,8 @@ function renderDriverWalletState(state, statusText) {
   if (statusTarget) {
     statusTarget.textContent = statusText || 'Sin movimientos recientes.';
   }
+
+  renderFinanceMetrics(state);
 
   if (!movementsTarget) {
     return;
@@ -142,6 +206,7 @@ async function fetchDriverWalletFromApi() {
     movements: Array.isArray(movements.items)
       ? movements.items.map((item) => ({
         amount: Number(item.amountUsd || 0),
+        type: item.type || '',
         label: mapMovementLabel(item.type),
         date: item.createdAt,
       }))
@@ -170,6 +235,7 @@ function addDriverWalletMovement(amount, label) {
   state.balance = Number((state.balance + numericAmount).toFixed(2));
   state.movements.push({
     amount: numericAmount,
+    type: numericAmount < 0 ? 'service_fee' : 'topup',
     label,
     date: new Date().toISOString(),
   });
