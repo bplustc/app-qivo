@@ -39,6 +39,24 @@ La carpeta `dist/` se genera con:
 - CSS copiado para mantener compatibilidad de estilos actual.
 - JavaScript minificado y ofuscado (mangle/compress).
 
+## Backend de billetera y pagos (nuevo)
+Se agrego un backend base en `backend/` para:
+- Consultar saldo del conductor.
+- Consultar historial de movimientos.
+- Crear intencion de recarga.
+- Descontar 1 USD por servicio completado.
+- Procesar webhooks de pago (base idempotente).
+
+Pasos rapidos:
+1. Ir a la carpeta `backend/`.
+2. Ejecutar `npm install`.
+3. Copiar `.env.example` a `.env`.
+4. Configurar `DATABASE_URL`.
+5. Ejecutar `npm run dev`.
+
+Health check:
+- `GET http://localhost:4000/api/v1/health`
+
 ## Deploy automatico (GitHub Pages)
 El repositorio incluye el workflow `deploy-pages.yml` en `.github/workflows/`.
 
