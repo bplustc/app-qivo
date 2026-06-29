@@ -29,6 +29,7 @@ let welcomeTimer = null;
 let screenTransitionCleanupTimer = null;
 let hasInitializedFlow = false;
 const MIN_RECOMMENDED_BALANCE = 5;
+let walletMovementFilter = 'today';
 
 function formatUsd(value) {
   return `$${Number(value || 0).toFixed(2)}`;
@@ -137,6 +138,50 @@ function mapMovementLabel(type) {
   return 'Ajuste de saldo';
 }
 
+function matchesMovementFilter(movementDate, filterKey) {
+  const now = new Date();
+
+  if (filterKey === 'today') {
+    return isSameLocalDay(movementDate, now);
+  }
+
+  const diffMs = now.getTime() - movementDate.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+  if (filterKey === '7d') {
+    return diffDays <= 7;
+  }
+
+  if (filterKey === '30d') {
+    return diffDays <= 30;
+  }
+
+  return true;
+}
+
+function getFilteredMovements(movements, filterKey) {
+  return movements.filter((item) => {
+    if (!item || !item.date) {
+      return false;
+    }
+
+    const movementDate = new Date(item.date);
+    if (Number.isNaN(movementDate.getTime())) {
+      return false;
+    }
+
+    return matchesMovementFilter(movementDate, filterKey);
+  });
+}
+
+function setWalletFilter(filterKey) {
+  walletMovementFilter = filterKey;
+
+  document.querySelectorAll('.wallet-filter-btn').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.walletFilter === filterKey);
+  });
+}
+
 function renderDriverWalletState(state, statusText) {
   const balanceTarget = document.getElementById('driver-wallet-balance');
   const statusTarget = document.getElementById('driver-wallet-status');
@@ -156,12 +201,14 @@ function renderDriverWalletState(state, statusText) {
     return;
   }
 
-  if (!state.movements.length) {
-    movementsTarget.innerHTML = '<li class="wallet-empty">Aun no tienes recargas registradas.</li>';
+  const filteredMovements = getFilteredMovements(state.movements, walletMovementFilter);
+
+  if (!filteredMovements.length) {
+    movementsTarget.innerHTML = '<li class="wallet-empty">No hay movimientos para el filtro seleccionado.</li>';
     return;
   }
 
-  movementsTarget.innerHTML = state.movements
+  movementsTarget.innerHTML = filteredMovements
     .slice()
     .reverse()
     .slice(0, 6)
@@ -916,6 +963,16 @@ document.addEventListener('DOMContentLoaded', () => {
       await topupDriverWallet(amount);
     });
   });
+
+  document.querySelectorAll('.wallet-filter-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const filterKey = button.dataset.walletFilter || 'today';
+      setWalletFilter(filterKey);
+      renderDriverWallet();
+    });
+  });
+
+  setWalletFilter('today');
 
   document.getElementById('wallet-refresh-btn')?.addEventListener('click', async () => {
     await renderDriverWallet();

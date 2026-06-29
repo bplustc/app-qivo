@@ -259,6 +259,12 @@
 
                             <article class="wallet-card finance-block finance-history" aria-label="Historial de movimientos">
                                 <h4>Movimientos recientes</h4>
+                                <div class="wallet-filters" role="group" aria-label="Filtrar movimientos">
+                                    <button type="button" class="wallet-filter-btn is-active" data-wallet-filter="today">Hoy</button>
+                                    <button type="button" class="wallet-filter-btn" data-wallet-filter="7d">7 dias</button>
+                                    <button type="button" class="wallet-filter-btn" data-wallet-filter="30d">30 dias</button>
+                                    <button type="button" class="wallet-filter-btn" data-wallet-filter="all">Todo</button>
+                                </div>
                                 <ul id="driver-wallet-movements" class="wallet-movements-list"></ul>
                             </article>
                         </section>
