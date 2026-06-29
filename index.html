@@ -216,7 +216,13 @@
                             <p><strong>Vehículo:</strong> Chevrolet Beat</p>
                             <p><strong>Color:</strong> Plateado</p>
                         </div>
+                        <button class="btn-ghost" type="button" id="logout-driver">Cerrar sesión</button>
+                    </article>
+                </section>
 
+                <section class="tab-panel" data-tab-panel="finance">
+                    <article class="panel-card">
+                        <h3>Finanzas</h3>
                         <article class="wallet-card" aria-label="Saldo y recarga del conductor">
                             <h4>Saldo disponible</h4>
                             <p id="driver-wallet-balance" class="wallet-balance">$0.00</p>
@@ -234,13 +240,11 @@
                                 <ul id="driver-wallet-movements" class="wallet-movements-list"></ul>
                             </div>
                         </article>
-
-                        <button class="btn-ghost" type="button" id="logout-driver">Cerrar sesión</button>
                     </article>
                 </section>
             </main>
 
-            <nav class="bottom-nav" data-nav-root="driver" aria-label="Navegación conductor">
+            <nav class="bottom-nav driver-four" data-nav-root="driver" aria-label="Navegación conductor">
                 <button type="button" class="nav-item is-active" data-tab-target="home">
                     <span>🏠</span>
                     <small>Inicio</small>
@@ -252,6 +256,10 @@
                 <button type="button" class="nav-item" data-tab-target="profile">
                     <span>👤</span>
                     <small>Perfil</small>
+                </button>
+                <button type="button" class="nav-item" data-tab-target="finance">
+                    <span>💳</span>
+                    <small>Finanzas</small>
                 </button>
             </nav>
         </section>

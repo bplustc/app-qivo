@@ -590,6 +590,10 @@ select:focus {
   grid-template-columns: 1fr;
 }
 
+.bottom-nav.driver-four {
+  grid-template-columns: repeat(4, 1fr);
+}
+
 .nav-item {
   border: 0;
   background: transparent;

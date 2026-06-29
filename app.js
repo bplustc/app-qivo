@@ -305,7 +305,7 @@ function setTab(mode, tab) {
     renderDriverRequests();
   }
 
-  if (mode === 'driver' && tab === 'profile') {
+  if (mode === 'driver' && tab === 'finance') {
     renderDriverWallet();
   }
 }
