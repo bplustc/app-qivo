@@ -216,6 +216,25 @@
                             <p><strong>Vehículo:</strong> Chevrolet Beat</p>
                             <p><strong>Color:</strong> Plateado</p>
                         </div>
+
+                        <article class="wallet-card" aria-label="Saldo y recarga del conductor">
+                            <h4>Saldo disponible</h4>
+                            <p id="driver-wallet-balance" class="wallet-balance">$0.00</p>
+                            <p id="driver-wallet-status" class="wallet-status" aria-live="polite">Sin movimientos recientes.</p>
+
+                            <div class="wallet-actions">
+                                <button type="button" class="btn-main wallet-topup-btn" data-topup-amount="5">Recargar $5</button>
+                                <button type="button" class="btn-main wallet-topup-btn" data-topup-amount="10">Recargar $10</button>
+                                <button type="button" class="btn-main wallet-topup-btn" data-topup-amount="20">Recargar $20</button>
+                                <button type="button" class="btn-ghost" id="wallet-refresh-btn">Actualizar saldo</button>
+                            </div>
+
+                            <div class="wallet-history">
+                                <h4>Movimientos</h4>
+                                <ul id="driver-wallet-movements" class="wallet-movements-list"></ul>
+                            </div>
+                        </article>
+
                         <button class="btn-ghost" type="button" id="logout-driver">Cerrar sesión</button>
                     </article>
                 </section>

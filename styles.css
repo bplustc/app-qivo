@@ -466,6 +466,83 @@ select:focus {
   margin: 8px 0;
 }
 
+.wallet-card {
+  margin-top: 12px;
+  border: 1px solid #d1dce8;
+  border-radius: 14px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.wallet-card h4 {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+}
+
+.wallet-balance {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0f766e;
+}
+
+.wallet-status {
+  margin: 4px 0 10px;
+  color: #475569;
+  font-size: 0.82rem;
+}
+
+.wallet-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.wallet-topup-btn {
+  margin: 0;
+  padding: 9px 10px;
+  font-size: 0.84rem;
+}
+
+.wallet-history {
+  margin-top: 10px;
+}
+
+.wallet-history h4 {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+}
+
+.wallet-movements-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.wallet-movements-list li {
+  border: 1px solid #dbe5ef;
+  border-radius: 10px;
+  padding: 8px;
+  background: #ffffff;
+  display: grid;
+  gap: 2px;
+}
+
+.wallet-movements-list li strong {
+  color: #0f172a;
+}
+
+.wallet-movements-list li small {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.wallet-empty {
+  color: #64748b;
+}
+
 .request-list {
   display: grid;
   gap: 10px;

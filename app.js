@@ -1,6 +1,7 @@
 const STORAGE_SESSION = 'qivo_session_mode';
 const STORAGE_REQUESTS = 'qivo_requests';
 const STORAGE_PASSENGER_PROFILE = 'qivo_passenger_profile';
+const STORAGE_DRIVER_WALLET = 'qivo_driver_wallet';
 const SCREEN_TRANSITION_MS = 750;
 
 const PRESET_USERS = {
@@ -24,6 +25,90 @@ let pendingAuthMode = null;
 let welcomeTimer = null;
 let screenTransitionCleanupTimer = null;
 let hasInitializedFlow = false;
+
+function formatUsd(value) {
+  return `$${Number(value || 0).toFixed(2)}`;
+}
+
+function getLocalDriverWallet() {
+  const fallback = { balance: 0, movements: [] };
+
+  try {
+    const raw = localStorage.getItem(STORAGE_DRIVER_WALLET);
+    if (!raw) {
+      return fallback;
+    }
+
+    const parsed = JSON.parse(raw);
+    const balance = Number(parsed.balance || 0);
+    const movements = Array.isArray(parsed.movements) ? parsed.movements : [];
+
+    return {
+      balance: isFinite(balance) ? balance : 0,
+      movements,
+    };
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function saveLocalDriverWallet(state) {
+  localStorage.setItem(STORAGE_DRIVER_WALLET, JSON.stringify(state));
+}
+
+function renderDriverWallet() {
+  const balanceTarget = document.getElementById('driver-wallet-balance');
+  const statusTarget = document.getElementById('driver-wallet-status');
+  const movementsTarget = document.getElementById('driver-wallet-movements');
+  const state = getLocalDriverWallet();
+
+  if (balanceTarget) {
+    balanceTarget.textContent = formatUsd(state.balance);
+  }
+
+  if (statusTarget && !state.movements.length) {
+    statusTarget.textContent = 'Sin movimientos recientes.';
+  }
+
+  if (!movementsTarget) {
+    return;
+  }
+
+  if (!state.movements.length) {
+    movementsTarget.innerHTML = '<li class="wallet-empty">Aun no tienes recargas registradas.</li>';
+    return;
+  }
+
+  movementsTarget.innerHTML = state.movements
+    .slice()
+    .reverse()
+    .slice(0, 6)
+    .map((item) => {
+      const sign = Number(item.amount) >= 0 ? '+' : '-';
+      const amount = formatUsd(Math.abs(Number(item.amount || 0)));
+      const date = item.date ? new Date(item.date).toLocaleString('es-EC') : '-';
+      return `<li><span>${item.label}</span><strong>${sign}${amount}</strong><small>${date}</small></li>`;
+    })
+    .join('');
+}
+
+function addDriverWalletMovement(amount, label) {
+  const state = getLocalDriverWallet();
+  const numericAmount = Number(amount || 0);
+  state.balance = Number((state.balance + numericAmount).toFixed(2));
+  state.movements.push({
+    amount: numericAmount,
+    label,
+    date: new Date().toISOString(),
+  });
+
+  if (state.movements.length > 30) {
+    state.movements = state.movements.slice(-30);
+  }
+
+  saveLocalDriverWallet(state);
+  renderDriverWallet();
+}
 
 function isDesktopRestricted() {
   const hasDesktopPointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -106,6 +191,10 @@ function setTab(mode, tab) {
   if (mode === 'driver' && tab === 'home') {
     renderDriverRequests();
   }
+
+  if (mode === 'driver' && tab === 'profile') {
+    renderDriverWallet();
+  }
 }
 
 function enterMode(mode) {
@@ -121,6 +210,7 @@ function enterMode(mode) {
     setActiveScreen('driver-view');
     setTab('driver', 'home');
     renderDriverRequests();
+    renderDriverWallet();
     return;
   }
 
@@ -636,6 +726,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('logout-passenger')?.addEventListener('click', logout);
   document.getElementById('logout-driver')?.addEventListener('click', logout);
+
+  document.querySelectorAll('.wallet-topup-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const amount = Number(button.dataset.topupAmount || 0);
+      if (!isFinite(amount) || amount <= 0) {
+        return;
+      }
+
+      addDriverWalletMovement(amount, `Recarga manual ${formatUsd(amount)}`);
+
+      const statusTarget = document.getElementById('driver-wallet-status');
+      if (statusTarget) {
+        statusTarget.textContent = `Recarga aplicada: ${formatUsd(amount)}.`;
+      }
+    });
+  });
+
+  document.getElementById('wallet-refresh-btn')?.addEventListener('click', () => {
+    renderDriverWallet();
+    const statusTarget = document.getElementById('driver-wallet-status');
+    if (statusTarget) {
+      statusTarget.textContent = 'Saldo actualizado desde almacenamiento local.';
+    }
+  });
 
   tryStartFlow();
 });
