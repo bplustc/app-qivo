@@ -223,23 +223,30 @@
                 <section class="tab-panel" data-tab-panel="finance">
                     <article class="panel-card">
                         <h3>Finanzas</h3>
-                        <article class="wallet-card" aria-label="Saldo y recarga del conductor">
-                            <h4>Saldo disponible</h4>
-                            <p id="driver-wallet-balance" class="wallet-balance">$0.00</p>
-                            <p id="driver-wallet-status" class="wallet-status" aria-live="polite">Sin movimientos recientes.</p>
+                        <section class="finance-layout" aria-label="Panel financiero del conductor">
+                            <article class="wallet-card finance-block" aria-label="Resumen de saldo">
+                                <h4>Saldo actual</h4>
+                                <p id="driver-wallet-balance" class="wallet-balance">$0.00</p>
+                                <p class="wallet-meta">Costo por servicio completado: <strong>$1.00</strong></p>
+                                <p id="driver-wallet-status" class="wallet-status" aria-live="polite">Sin movimientos recientes.</p>
+                            </article>
 
-                            <div class="wallet-actions">
-                                <button type="button" class="btn-main wallet-topup-btn" data-topup-amount="5">Recargar $5</button>
-                                <button type="button" class="btn-main wallet-topup-btn" data-topup-amount="10">Recargar $10</button>
-                                <button type="button" class="btn-main wallet-topup-btn" data-topup-amount="20">Recargar $20</button>
-                                <button type="button" class="btn-ghost" id="wallet-refresh-btn">Actualizar saldo</button>
-                            </div>
+                            <article class="wallet-card finance-block" aria-label="Recargar saldo">
+                                <h4>Recargar saldo</h4>
+                                <p class="wallet-meta">Selecciona un monto para recargar tu billetera.</p>
+                                <div class="wallet-actions">
+                                    <button type="button" class="btn-main wallet-topup-btn" data-topup-amount="5">Recargar $5</button>
+                                    <button type="button" class="btn-main wallet-topup-btn" data-topup-amount="10">Recargar $10</button>
+                                    <button type="button" class="btn-main wallet-topup-btn" data-topup-amount="20">Recargar $20</button>
+                                    <button type="button" class="btn-ghost" id="wallet-refresh-btn">Actualizar saldo</button>
+                                </div>
+                            </article>
 
-                            <div class="wallet-history">
-                                <h4>Movimientos</h4>
+                            <article class="wallet-card finance-block finance-history" aria-label="Historial de movimientos">
+                                <h4>Movimientos recientes</h4>
                                 <ul id="driver-wallet-movements" class="wallet-movements-list"></ul>
-                            </div>
-                        </article>
+                            </article>
+                        </section>
                     </article>
                 </section>
             </main>

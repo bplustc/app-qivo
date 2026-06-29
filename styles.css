@@ -474,6 +474,19 @@ select:focus {
   background: #f8fafc;
 }
 
+.finance-layout {
+  display: grid;
+  gap: 10px;
+}
+
+.finance-block {
+  margin-top: 0;
+}
+
+.finance-history {
+  background: #f1f5f9;
+}
+
 .wallet-card h4 {
   margin: 0 0 6px;
   font-size: 0.95rem;
@@ -490,6 +503,12 @@ select:focus {
   margin: 4px 0 10px;
   color: #475569;
   font-size: 0.82rem;
+}
+
+.wallet-meta {
+  margin: 4px 0;
+  color: #475569;
+  font-size: 0.8rem;
 }
 
 .wallet-actions {
@@ -541,6 +560,16 @@ select:focus {
 
 .wallet-empty {
   color: #64748b;
+}
+
+@media (min-width: 720px) {
+  .finance-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .finance-history {
+    grid-column: 1 / -1;
+  }
 }
 
 .request-list {
