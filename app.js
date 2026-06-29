@@ -3,6 +3,9 @@ const STORAGE_REQUESTS = 'qivo_requests';
 const STORAGE_PASSENGER_PROFILE = 'qivo_passenger_profile';
 const STORAGE_DRIVER_WALLET = 'qivo_driver_wallet';
 const SCREEN_TRANSITION_MS = 750;
+const WALLET_API_BASE = 'http://localhost:4000/api/v1';
+const WALLET_PROVIDER = 'kushki';
+const DEMO_DRIVER_ID = '11111111-1111-1111-1111-111111111111';
 
 const PRESET_USERS = {
   passenger: {
@@ -56,18 +59,33 @@ function saveLocalDriverWallet(state) {
   localStorage.setItem(STORAGE_DRIVER_WALLET, JSON.stringify(state));
 }
 
-function renderDriverWallet() {
+function mapMovementLabel(type) {
+  if (type === 'topup') {
+    return 'Recarga con tarjeta';
+  }
+
+  if (type === 'service_fee') {
+    return 'Descuento por servicio';
+  }
+
+  if (type === 'refund') {
+    return 'Reembolso';
+  }
+
+  return 'Ajuste de saldo';
+}
+
+function renderDriverWalletState(state, statusText) {
   const balanceTarget = document.getElementById('driver-wallet-balance');
   const statusTarget = document.getElementById('driver-wallet-status');
   const movementsTarget = document.getElementById('driver-wallet-movements');
-  const state = getLocalDriverWallet();
 
   if (balanceTarget) {
     balanceTarget.textContent = formatUsd(state.balance);
   }
 
-  if (statusTarget && !state.movements.length) {
-    statusTarget.textContent = 'Sin movimientos recientes.';
+  if (statusTarget) {
+    statusTarget.textContent = statusText || 'Sin movimientos recientes.';
   }
 
   if (!movementsTarget) {
@@ -92,6 +110,60 @@ function renderDriverWallet() {
     .join('');
 }
 
+async function walletApiRequest(path, options = {}) {
+  const response = await fetch(`${WALLET_API_BASE}${path}`, {
+    method: options.method || 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-driver-id': DEMO_DRIVER_ID,
+      'x-role': 'driver',
+      ...(options.headers || {}),
+    },
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = data.message || 'Error al consumir API de billetera';
+    throw new Error(message);
+  }
+
+  return data;
+}
+
+async function fetchDriverWalletFromApi() {
+  const [wallet, movements] = await Promise.all([
+    walletApiRequest('/wallet/me'),
+    walletApiRequest('/wallet/movements?limit=6'),
+  ]);
+
+  return {
+    balance: Number(wallet.balanceUsd || 0),
+    movements: Array.isArray(movements.items)
+      ? movements.items.map((item) => ({
+        amount: Number(item.amountUsd || 0),
+        label: mapMovementLabel(item.type),
+        date: item.createdAt,
+      }))
+      : [],
+  };
+}
+
+async function renderDriverWallet() {
+  try {
+    const state = await fetchDriverWalletFromApi();
+    renderDriverWalletState(state, 'Saldo sincronizado con servidor.');
+    saveLocalDriverWallet(state);
+  } catch (error) {
+    const state = getLocalDriverWallet();
+    const hasLocalMovements = state.movements.length > 0;
+    const statusText = hasLocalMovements
+      ? 'Mostrando saldo local temporal (backend no disponible).'
+      : 'Sin conexión al backend. Usa recarga local temporal.';
+    renderDriverWalletState(state, statusText);
+  }
+}
+
 function addDriverWalletMovement(amount, label) {
   const state = getLocalDriverWallet();
   const numericAmount = Number(amount || 0);
@@ -107,7 +179,48 @@ function addDriverWalletMovement(amount, label) {
   }
 
   saveLocalDriverWallet(state);
-  renderDriverWallet();
+  renderDriverWalletState(state, 'Saldo actualizado en modo local.');
+}
+
+async function topupDriverWallet(amount) {
+  const statusTarget = document.getElementById('driver-wallet-status');
+
+  if (statusTarget) {
+    statusTarget.textContent = `Procesando recarga de ${formatUsd(amount)}...`;
+  }
+
+  try {
+    const intent = await walletApiRequest('/wallet/topup/create-intent', {
+      method: 'POST',
+      body: {
+        amountUsd: amount,
+        provider: WALLET_PROVIDER,
+      },
+    });
+
+    await walletApiRequest(`/payments/webhook/${WALLET_PROVIDER}`, {
+      method: 'POST',
+      body: {
+        eventId: `demo-event-${Date.now()}`,
+        eventType: 'payment.paid',
+        paymentId: intent.paymentId,
+        providerPaymentId: `demo-provider-${intent.paymentId}`,
+      },
+    });
+
+    await renderDriverWallet();
+
+    if (statusTarget) {
+      statusTarget.textContent = `Recarga aplicada en servidor: ${formatUsd(amount)}.`;
+    }
+    return;
+  } catch (error) {
+    addDriverWalletMovement(amount, `Recarga local ${formatUsd(amount)}`);
+
+    if (statusTarget) {
+      statusTarget.textContent = `Backend no disponible. Recarga guardada localmente (${formatUsd(amount)}).`;
+    }
+  }
 }
 
 function isDesktopRestricted() {
@@ -728,26 +841,22 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('logout-driver')?.addEventListener('click', logout);
 
   document.querySelectorAll('.wallet-topup-btn').forEach((button) => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', async () => {
       const amount = Number(button.dataset.topupAmount || 0);
       if (!isFinite(amount) || amount <= 0) {
         return;
       }
 
-      addDriverWalletMovement(amount, `Recarga manual ${formatUsd(amount)}`);
-
-      const statusTarget = document.getElementById('driver-wallet-status');
-      if (statusTarget) {
-        statusTarget.textContent = `Recarga aplicada: ${formatUsd(amount)}.`;
-      }
+      await topupDriverWallet(amount);
     });
   });
 
-  document.getElementById('wallet-refresh-btn')?.addEventListener('click', () => {
-    renderDriverWallet();
+  document.getElementById('wallet-refresh-btn')?.addEventListener('click', async () => {
+    await renderDriverWallet();
     const statusTarget = document.getElementById('driver-wallet-status');
-    if (statusTarget) {
-      statusTarget.textContent = 'Saldo actualizado desde almacenamiento local.';
+    const walletState = getLocalDriverWallet();
+    if (statusTarget && !walletState.movements.length) {
+      statusTarget.textContent = 'Saldo actualizado.';
     }
   });
 
