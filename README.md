@@ -58,6 +58,9 @@ Una vez habilitado, cada commit en `main` dispara el despliegue.
 - `styles.css`: Estilos generales, modal y comportamiento de interfaz movil.
 - `app.js`: Logica de UI, validaciones, mapa, sincronizacion y WhatsApp.
 - `Images/`: Logo e iconos visuales.
+- `docs/wallet-schema.sql`: Esquema SQL base para billetera, pagos, movimientos y webhooks.
+- `docs/wallet-api-contract.md`: Contratos de endpoints para recarga y cobro por servicio.
+- `docs/wallet-implementation-plan.md`: Plan por fases para integrar cobros y saldo.
 - `robots.txt`: Politica de rastreo para buscadores.
 - `sitemap.xml`: Sitemap XML para indexacion.
 - `VERSIONES.md`: Historial de cambios por version.
