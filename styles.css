@@ -124,6 +124,17 @@ body.is-desktop-blocked .desktop-block-overlay {
   padding-bottom: 8px;
 }
 
+.header-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.compact-logo {
+  width: 38px;
+  height: 38px;
+}
+
 .logo {
   width: 54px;
   height: 54px;
