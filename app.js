@@ -605,6 +605,13 @@ function setTab(mode, tab) {
     return;
   }
 
+  if (mode === 'passenger') {
+    const passengerSubtitle = document.getElementById('passenger-compact-subtitle');
+    if (passengerSubtitle) {
+      passengerSubtitle.classList.toggle('is-hidden', tab !== 'home');
+    }
+  }
+
   root.querySelectorAll('.tab-panel').forEach((panel) => {
     panel.classList.toggle('is-active', panel.dataset.tabPanel === tab);
   });
