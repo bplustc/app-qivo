@@ -49,6 +49,23 @@ body {
   font-weight: 600;
 }
 
+.desktop-block-qr-title {
+  margin-top: 14px !important;
+  color: #1e293b !important;
+  font-weight: 600;
+}
+
+.desktop-block-qr {
+  margin-top: 10px;
+  width: 220px;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 8px;
+}
+
 body.is-desktop-blocked {
   background: #ecfeff;
 }
