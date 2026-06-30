@@ -8,6 +8,8 @@ const SCREEN_TRANSITION_MS = 750;
 const WALLET_API_BASE = 'http://localhost:4000/api/v1';
 const WALLET_PROVIDER = 'kushki';
 const DEMO_DRIVER_ID = '11111111-1111-1111-1111-111111111111';
+const SERVICE_PRICE_USD = 15;
+const SERVICE_PLATFORM_FEE_USD = 1;
 
 const PRESET_USERS = {
   passenger: {
@@ -286,6 +288,10 @@ function mapMovementLabel(type) {
     return 'Recarga con tarjeta';
   }
 
+  if (type === 'service_income') {
+    return 'Ingreso por servicio';
+  }
+
   if (type === 'service_fee') {
     return 'Descuento por servicio';
   }
@@ -436,12 +442,16 @@ async function renderDriverWallet() {
 }
 
 function addDriverWalletMovement(amount, label) {
+  addDriverWalletMovementByType(amount, label, amount < 0 ? 'service_fee' : 'topup');
+}
+
+function addDriverWalletMovementByType(amount, label, type) {
   const state = getLocalDriverWallet();
   const numericAmount = Number(amount || 0);
   state.balance = Number((state.balance + numericAmount).toFixed(2));
   state.movements.push({
     amount: numericAmount,
-    type: numericAmount < 0 ? 'service_fee' : 'topup',
+    type: type || (numericAmount < 0 ? 'service_fee' : 'topup'),
     label,
     date: new Date().toISOString(),
   });
@@ -452,6 +462,36 @@ function addDriverWalletMovement(amount, label) {
 
   saveLocalDriverWallet(state);
   renderDriverWalletState(state, 'Saldo actualizado en modo local.');
+}
+
+function markDriverServiceCompleted(requestId) {
+  const requests = getRequests();
+  const requestIndex = requests.findIndex((item) => String(item.id) === String(requestId));
+
+  if (requestIndex < 0) {
+    return;
+  }
+
+  const request = requests[requestIndex];
+  if (request.status === 'completed') {
+    return;
+  }
+
+  request.status = 'completed';
+  request.completedAt = new Date().toISOString();
+  requests[requestIndex] = request;
+  saveRequests(requests);
+
+  const fare = Number(request.fareUsd || SERVICE_PRICE_USD);
+  addDriverWalletMovementByType(fare, `Cobro servicio ${formatUsd(fare)}`, 'service_income');
+  addDriverWalletMovementByType(-SERVICE_PLATFORM_FEE_USD, `Comisión Qivo ${formatUsd(SERVICE_PLATFORM_FEE_USD)}`, 'service_fee');
+
+  renderDriverRequests();
+
+  const statusTarget = document.getElementById('driver-wallet-status');
+  if (statusTarget) {
+    statusTarget.textContent = `Servicio marcado como realizado. +${formatUsd(fare)} y -${formatUsd(SERVICE_PLATFORM_FEE_USD)} de comisión.`;
+  }
 }
 
 async function topupDriverWallet(amount) {
@@ -730,17 +770,36 @@ function renderDriverRequests() {
   container.innerHTML = requests
     .slice()
     .reverse()
-    .map((item) => `
+    .map((item) => {
+      const fare = Number(item.fareUsd || SERVICE_PRICE_USD);
+      const status = item.status === 'completed' ? 'completed' : 'pending';
+      const statusLabel = status === 'completed' ? 'Realizado' : 'Pendiente';
+
+      return `
       <article class="request-card">
-        <strong>${item.servicio}</strong>
+        <div class="request-head">
+          <strong>${item.servicio}</strong>
+          <span class="request-status ${status}">${statusLabel}</span>
+        </div>
         <p><b>Cliente:</b> ${item.nombre} ${item.apellido}</p>
         <p><b>Teléfono:</b> ${item.telefono}</p>
         <p><b>Dirección:</b> ${item.direccion}</p>
         <p><b>Fecha:</b> ${item.fecha} ${item.hora}</p>
+        <p><b>Tarifa cliente:</b> ${formatUsd(fare)}</p>
         <p><b>GPS:</b> ${item.latitud || '-'}, ${item.longitud || '-'}</p>
+        ${status === 'pending'
+    ? `<button type="button" class="btn-main request-complete-btn" data-request-complete-id="${item.id}">Servicio realizado</button>`
+    : '<p class="request-complete-note">Este servicio ya fue liquidado en finanzas.</p>'}
       </article>
-    `)
+    `;
+    })
     .join('');
+
+  container.querySelectorAll('[data-request-complete-id]').forEach((button) => {
+    button.addEventListener('click', () => {
+      markDriverServiceCompleted(button.dataset.requestCompleteId);
+    });
+  });
 }
 
 function refreshPassengerProfile() {
@@ -1096,6 +1155,8 @@ document.addEventListener('DOMContentLoaded', () => {
         conductor: String(formData.get('conductor') || ''),
         latitud: String(formData.get('latitud') || ''),
         longitud: String(formData.get('longitud') || ''),
+        fareUsd: SERVICE_PRICE_USD,
+        status: 'pending',
         createdAt: new Date().toISOString(),
       };
 

@@ -173,16 +173,6 @@ body.is-desktop-blocked .desktop-block-overlay {
   animation: welcome-rise 2s ease-out both;
 }
 
-.install-app-btn {
-  margin-top: 6px;
-}
-
-.install-app-help {
-  margin: 8px 0 0;
-  color: #475569;
-  font-size: 0.78rem;
-}
-
 .is-hidden {
   display: none !important;
 }
@@ -493,6 +483,26 @@ select:focus {
   color: #065f46;
 }
 
+.fare-summary {
+  margin-top: 8px;
+  border: 1px solid #99f6e4;
+  background: linear-gradient(145deg, #ecfeff, #f0fdfa);
+  border-radius: 12px;
+  padding: 10px;
+  display: grid;
+  gap: 2px;
+}
+
+.fare-summary-label {
+  font-size: 0.8rem;
+  color: #0f766e;
+}
+
+.fare-summary-amount {
+  font-size: 1.2rem;
+  color: #0f172a;
+}
+
 .form-error {
   color: #dc2626;
   font-size: 0.8rem;
@@ -685,6 +695,41 @@ select:focus {
 .request-card p {
   margin: 6px 0;
   font-size: 0.87rem;
+}
+
+.request-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.request-status {
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.request-status.pending {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.request-status.completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.request-complete-btn {
+  margin-top: 8px;
+}
+
+.request-complete-note {
+  margin: 8px 0 0;
+  color: #166534;
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .empty-state {
