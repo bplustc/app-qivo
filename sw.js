@@ -1,11 +1,11 @@
-const CACHE_NAME = 'qivo-app-v2';
+const CACHE_NAME = 'qivo-app-v3';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/styles.css',
   '/app.js',
-  '/manifest.json',
-  '/Images/logo-qivo.png'
+  '/manifest.json?v=20260630',
+  '/Images/logo-qivo.png?v=20260630'
 ];
 
 self.addEventListener('install', (event) => {
