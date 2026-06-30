@@ -2,6 +2,7 @@ const STORAGE_SESSION = 'qivo_session_mode';
 const STORAGE_REQUESTS = 'qivo_requests';
 const STORAGE_PASSENGER_PROFILE = 'qivo_passenger_profile';
 const STORAGE_DRIVER_WALLET = 'qivo_driver_wallet';
+const STORAGE_SELECTED_MODE = 'qivo_selected_mode';
 const SCREEN_TRANSITION_MS = 750;
 const WALLET_API_BASE = 'http://localhost:4000/api/v1';
 const WALLET_PROVIDER = 'kushki';
@@ -155,6 +156,23 @@ function getLocalDriverWallet() {
 
 function saveLocalDriverWallet(state) {
   localStorage.setItem(STORAGE_DRIVER_WALLET, JSON.stringify(state));
+}
+
+function getSavedSelectedMode() {
+  const mode = localStorage.getItem(STORAGE_SELECTED_MODE);
+  return mode === 'passenger' || mode === 'driver' ? mode : null;
+}
+
+function saveSelectedMode(mode) {
+  if (mode === 'passenger' || mode === 'driver') {
+    localStorage.setItem(STORAGE_SELECTED_MODE, mode);
+  }
+}
+
+function highlightModeSelection(mode) {
+  document.querySelectorAll('[data-enter-mode]').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.enterMode === mode);
+  });
 }
 
 function isSameLocalDay(dateA, dateB) {
@@ -540,6 +558,7 @@ function enterMode(mode) {
 }
 
 function loginToMode(mode) {
+  saveSelectedMode(mode);
   localStorage.setItem(STORAGE_SESSION, mode);
   enterMode(mode);
 }
@@ -550,6 +569,8 @@ function showModeSelection() {
     clearTimeout(welcomeTimer);
     welcomeTimer = null;
   }
+
+  highlightModeSelection(getSavedSelectedMode());
   setActiveScreen('auth-view');
 }
 
@@ -586,6 +607,8 @@ function openLoginForMode(mode) {
     return;
   }
 
+  saveSelectedMode(mode);
+  highlightModeSelection(mode);
   pendingAuthMode = mode;
 
   const title = document.getElementById('login-title');
@@ -639,6 +662,7 @@ function hasValidCredentials(mode, username, password) {
 
 function logout() {
   localStorage.removeItem(STORAGE_SESSION);
+  localStorage.removeItem(STORAGE_SELECTED_MODE);
   showWelcomeFlow();
 }
 
@@ -861,6 +885,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const tryStartFlow = () => {
     const allowed = applyDesktopRestriction();
     if (!allowed || hasInitializedFlow) {
+      return;
+    }
+
+    const savedSessionMode = localStorage.getItem(STORAGE_SESSION);
+    if (savedSessionMode === 'passenger' || savedSessionMode === 'driver') {
+      hasInitializedFlow = true;
+      saveSelectedMode(savedSessionMode);
+      enterMode(savedSessionMode);
       return;
     }
 
