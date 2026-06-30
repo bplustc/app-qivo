@@ -274,7 +274,27 @@
                                 </div>
                                 <ul id="driver-wallet-movements" class="wallet-movements-list"></ul>
                             </article>
+
+                            <article class="wallet-card finance-block" aria-label="Solicitudes realizadas del conductor">
+                                <h4>Solicitudes realizadas</h4>
+                                <p class="wallet-meta">Selecciona una fecha para ver cuantas solicitudes realizaste ese dia.</p>
+                                <label for="completed-requests-date-picker" class="finance-date-label">Fecha</label>
+                                <input type="date" id="completed-requests-date-picker">
+                                <button type="button" class="btn-main" id="open-completed-requests-btn">Solicitudes realizadas</button>
+                            </article>
                         </section>
+                    </article>
+                </section>
+
+                <section class="tab-panel" data-tab-panel="completed-requests">
+                    <article class="panel-card">
+                        <div class="request-history-head">
+                            <h3>Solicitudes realizadas</h3>
+                            <button class="btn-ghost" type="button" id="completed-requests-back-btn">Volver a finanzas</button>
+                        </div>
+                        <p class="request-history-summary">Dia seleccionado: <strong id="completed-requests-selected-day">-</strong></p>
+                        <p class="request-history-summary">Total realizadas: <strong id="completed-requests-count">0</strong></p>
+                        <div id="completed-requests-list" class="request-list"></div>
                     </article>
                 </section>
             </main>

@@ -693,6 +693,33 @@ select:focus {
   color: #64748b;
 }
 
+.finance-date-label {
+  display: block;
+  margin-bottom: 6px;
+  color: #334155;
+  font-size: 0.84rem;
+}
+
+#open-completed-requests-btn {
+  margin-top: 10px;
+}
+
+.request-history-head {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.request-history-head .btn-ghost {
+  margin-top: 0;
+}
+
+.request-history-summary {
+  margin: 4px 0;
+  color: #334155;
+  font-size: 0.86rem;
+}
+
 @media (min-width: 720px) {
   .finance-kpis {
     grid-template-columns: repeat(3, minmax(0, 1fr));

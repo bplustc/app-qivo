@@ -10,6 +10,7 @@ const WALLET_PROVIDER = 'kushki';
 const DEMO_DRIVER_ID = '11111111-1111-1111-1111-111111111111';
 const SERVICE_PRICE_USD = 15;
 const SERVICE_PLATFORM_FEE_USD = 1;
+const COMPLETED_REQUESTS_RETENTION_DAYS = 30;
 
 const PRESET_USERS = {
   passenger: {
@@ -172,6 +173,10 @@ function getSavedTabsByMode() {
 }
 
 function saveTabForMode(mode, tab) {
+  if (mode === 'driver' && tab === 'completed-requests') {
+    return;
+  }
+
   const next = getSavedTabsByMode();
   next[mode] = tab;
   localStorage.setItem(STORAGE_ACTIVE_TAB_BY_MODE, JSON.stringify(next));
@@ -551,14 +556,127 @@ function getRequests() {
   try {
     const raw = localStorage.getItem(STORAGE_REQUESTS);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    const requests = Array.isArray(parsed) ? parsed : [];
+    const cleaned = pruneCompletedRequestsByRetention(requests);
+
+    if (cleaned.length !== requests.length) {
+      localStorage.setItem(STORAGE_REQUESTS, JSON.stringify(cleaned));
+    }
+
+    return cleaned;
   } catch (error) {
     return [];
   }
 }
 
 function saveRequests(requests) {
-  localStorage.setItem(STORAGE_REQUESTS, JSON.stringify(requests));
+  const cleaned = pruneCompletedRequestsByRetention(requests);
+  localStorage.setItem(STORAGE_REQUESTS, JSON.stringify(cleaned));
+}
+
+function pruneCompletedRequestsByRetention(requests) {
+  const retentionMs = COMPLETED_REQUESTS_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  const cutoffTime = Date.now() - retentionMs;
+
+  return requests.filter((item) => {
+    if (!item || item.status !== 'completed') {
+      return true;
+    }
+
+    const referenceDate = item.completedAt || item.createdAt;
+    const completedDate = new Date(referenceDate || '');
+    if (Number.isNaN(completedDate.getTime())) {
+      return false;
+    }
+
+    return completedDate.getTime() >= cutoffTime;
+  });
+}
+
+function getTodayDateInputValue() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseLocalDateInput(value) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null;
+  }
+
+  const [year, month, day] = value.split('-').map((part) => Number(part));
+  return new Date(year, month - 1, day);
+}
+
+function getDriverCompletedRequestsForDate(dateValue) {
+  const selectedDate = parseLocalDateInput(dateValue);
+  if (!selectedDate) {
+    return [];
+  }
+
+  return getRequests().filter((item) => {
+    if (!item || item.conductor !== 'Ramon Bolivar' || item.status !== 'completed') {
+      return false;
+    }
+
+    const completedDate = new Date(item.completedAt || item.createdAt || '');
+    if (Number.isNaN(completedDate.getTime())) {
+      return false;
+    }
+
+    return isSameLocalDay(completedDate, selectedDate);
+  });
+}
+
+function renderCompletedRequestsByDate(dateValue) {
+  const selectedDayTarget = document.getElementById('completed-requests-selected-day');
+  const countTarget = document.getElementById('completed-requests-count');
+  const listTarget = document.getElementById('completed-requests-list');
+
+  if (!selectedDayTarget || !countTarget || !listTarget) {
+    return;
+  }
+
+  const safeDate = parseLocalDateInput(dateValue) ? dateValue : getTodayDateInputValue();
+  const selectedDate = parseLocalDateInput(safeDate);
+  const items = getDriverCompletedRequestsForDate(safeDate);
+
+  selectedDayTarget.textContent = selectedDate
+    ? selectedDate.toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    : '-';
+  countTarget.textContent = String(items.length);
+
+  if (!items.length) {
+    listTarget.innerHTML = '<p class="empty-state">No tienes solicitudes realizadas para la fecha seleccionada.</p>';
+    return;
+  }
+
+  listTarget.innerHTML = items
+    .slice()
+    .reverse()
+    .map((item) => {
+      const fare = Number(item.fareUsd || SERVICE_PRICE_USD);
+      const completedDate = new Date(item.completedAt || item.createdAt || '');
+      const completedLabel = Number.isNaN(completedDate.getTime())
+        ? '-'
+        : completedDate.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
+
+      return `
+      <article class="request-card">
+        <div class="request-head">
+          <strong>${item.servicio}</strong>
+          <span class="request-status completed">Realizado</span>
+        </div>
+        <p><b>Cliente:</b> ${item.nombre} ${item.apellido}</p>
+        <p><b>Dirección:</b> ${item.direccion}</p>
+        <p><b>Hora realizada:</b> ${completedLabel}</p>
+        <p><b>Ingreso:</b> ${formatUsd(fare)}</p>
+      </article>
+    `;
+    })
+    .join('');
 }
 
 function setActiveScreen(screenId) {
@@ -617,7 +735,9 @@ function setTab(mode, tab) {
   });
 
   document.querySelectorAll(`[data-nav-root="${mode}"] .nav-item`).forEach((item) => {
-    item.classList.toggle('is-active', item.dataset.tabTarget === tab);
+    const isActive = item.dataset.tabTarget === tab
+      || (mode === 'driver' && tab === 'completed-requests' && item.dataset.tabTarget === 'finance');
+    item.classList.toggle('is-active', isActive);
   });
 
   saveTabForMode(mode, tab);
@@ -628,6 +748,12 @@ function setTab(mode, tab) {
 
   if (mode === 'driver' && tab === 'finance') {
     renderDriverWallet();
+  }
+
+  if (mode === 'driver' && tab === 'completed-requests') {
+    const picker = document.getElementById('completed-requests-date-picker');
+    const selectedDate = picker && picker.value ? picker.value : getTodayDateInputValue();
+    renderCompletedRequestsByDate(selectedDate);
   }
 }
 
@@ -767,7 +893,7 @@ function renderDriverRequests() {
     return;
   }
 
-  const requests = getRequests().filter((item) => item.conductor === 'Ramon Bolivar');
+  const requests = getRequests().filter((item) => item.conductor === 'Ramon Bolivar' && item.status !== 'completed');
 
   if (!requests.length) {
     container.innerHTML = '<p class="empty-state">No tienes solicitudes por el momento.</p>';
@@ -779,8 +905,8 @@ function renderDriverRequests() {
     .reverse()
     .map((item) => {
       const fare = Number(item.fareUsd || SERVICE_PRICE_USD);
-      const status = item.status === 'completed' ? 'completed' : 'pending';
-      const statusLabel = status === 'completed' ? 'Realizado' : 'Pendiente';
+      const status = 'pending';
+      const statusLabel = 'Pendiente';
 
       return `
       <article class="request-card">
@@ -794,9 +920,7 @@ function renderDriverRequests() {
         <p><b>Fecha:</b> ${item.fecha} ${item.hora}</p>
         <p><b>Tarifa cliente:</b> ${formatUsd(fare)}</p>
         <p><b>GPS:</b> ${item.latitud || '-'}, ${item.longitud || '-'}</p>
-        ${status === 'pending'
-    ? `<button type="button" class="btn-main request-complete-btn" data-request-complete-id="${item.id}">Servicio realizado</button>`
-    : '<p class="request-complete-note">Este servicio ya fue liquidado en finanzas.</p>'}
+        <button type="button" class="btn-main request-complete-btn" data-request-complete-id="${item.id}">Servicio realizado</button>
       </article>
     `;
     })
@@ -1123,6 +1247,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const form = document.getElementById('request-form');
   const feedback = document.getElementById('request-feedback');
+  const completedRequestsDatePicker = document.getElementById('completed-requests-date-picker');
+
+  if (completedRequestsDatePicker) {
+    completedRequestsDatePicker.value = getTodayDateInputValue();
+  }
 
   if (form) {
     form.addEventListener('submit', (event) => {
@@ -1226,6 +1355,32 @@ document.addEventListener('DOMContentLoaded', () => {
     if (statusTarget && !walletState.movements.length) {
       statusTarget.textContent = 'Saldo actualizado.';
     }
+  });
+
+  document.getElementById('open-completed-requests-btn')?.addEventListener('click', () => {
+    const dateValue = completedRequestsDatePicker && completedRequestsDatePicker.value
+      ? completedRequestsDatePicker.value
+      : getTodayDateInputValue();
+
+    if (completedRequestsDatePicker && !completedRequestsDatePicker.value) {
+      completedRequestsDatePicker.value = dateValue;
+    }
+
+    renderCompletedRequestsByDate(dateValue);
+    setTab('driver', 'completed-requests');
+  });
+
+  document.getElementById('completed-requests-back-btn')?.addEventListener('click', () => {
+    setTab('driver', 'finance');
+  });
+
+  completedRequestsDatePicker?.addEventListener('change', () => {
+    const activePanel = document.querySelector('#driver-tabs .tab-panel.is-active');
+    if (!activePanel || activePanel.dataset.tabPanel !== 'completed-requests') {
+      return;
+    }
+
+    renderCompletedRequestsByDate(completedRequestsDatePicker.value || getTodayDateInputValue());
   });
 
   tryStartFlow();
