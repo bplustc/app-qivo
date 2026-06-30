@@ -3,6 +3,7 @@ const STORAGE_REQUESTS = 'qivo_requests';
 const STORAGE_PASSENGER_PROFILE = 'qivo_passenger_profile';
 const STORAGE_DRIVER_WALLET = 'qivo_driver_wallet';
 const STORAGE_SELECTED_MODE = 'qivo_selected_mode';
+const STORAGE_ACTIVE_TAB_BY_MODE = 'qivo_active_tab_by_mode';
 const SCREEN_TRANSITION_MS = 750;
 const WALLET_API_BASE = 'http://localhost:4000/api/v1';
 const WALLET_PROVIDER = 'kushki';
@@ -156,6 +157,50 @@ function getLocalDriverWallet() {
 
 function saveLocalDriverWallet(state) {
   localStorage.setItem(STORAGE_DRIVER_WALLET, JSON.stringify(state));
+}
+
+function getSavedTabsByMode() {
+  try {
+    const raw = localStorage.getItem(STORAGE_ACTIVE_TAB_BY_MODE);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function saveTabForMode(mode, tab) {
+  const next = getSavedTabsByMode();
+  next[mode] = tab;
+  localStorage.setItem(STORAGE_ACTIVE_TAB_BY_MODE, JSON.stringify(next));
+}
+
+function getSavedTabForMode(mode) {
+  const saved = getSavedTabsByMode()[mode];
+  return typeof saved === 'string' ? saved : null;
+}
+
+function getDefaultTabForMode(mode) {
+  const validTabs = {
+    passenger: ['home', 'mode', 'profile'],
+    driver: ['home', 'mode', 'profile', 'finance'],
+  };
+
+  const saved = getSavedTabForMode(mode);
+  if (saved && validTabs[mode] && validTabs[mode].includes(saved)) {
+    return saved;
+  }
+
+  return 'home';
+}
+
+function getPreferredDriverTab() {
+  const wallet = getLocalDriverWallet();
+  if (Number(wallet.balance || 0) < 1) {
+    return 'finance';
+  }
+
+  return getDefaultTabForMode('driver');
 }
 
 function getSavedSelectedMode() {
@@ -528,6 +573,8 @@ function setTab(mode, tab) {
     item.classList.toggle('is-active', item.dataset.tabTarget === tab);
   });
 
+  saveTabForMode(mode, tab);
+
   if (mode === 'driver' && tab === 'home') {
     renderDriverRequests();
   }
@@ -540,7 +587,7 @@ function setTab(mode, tab) {
 function enterMode(mode) {
   if (mode === 'passenger') {
     setActiveScreen('passenger-view');
-    setTab('passenger', 'home');
+    setTab('passenger', getDefaultTabForMode('passenger'));
     refreshPassengerProfile();
     refreshMapIfNeeded();
     return;
@@ -548,7 +595,7 @@ function enterMode(mode) {
 
   if (mode === 'driver') {
     setActiveScreen('driver-view');
-    setTab('driver', 'home');
+    setTab('driver', getPreferredDriverTab());
     renderDriverRequests();
     renderDriverWallet();
     return;
@@ -663,6 +710,7 @@ function hasValidCredentials(mode, username, password) {
 function logout() {
   localStorage.removeItem(STORAGE_SESSION);
   localStorage.removeItem(STORAGE_SELECTED_MODE);
+  localStorage.removeItem(STORAGE_ACTIVE_TAB_BY_MODE);
   showWelcomeFlow();
 }
 
