@@ -260,6 +260,14 @@ body.is-desktop-blocked .desktop-block-overlay {
   margin-bottom: 6px;
 }
 
+.mode-icon-image {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  display: block;
+  margin-bottom: 8px;
+}
+
 .mode-card small {
   display: block;
   margin-top: 4px;
