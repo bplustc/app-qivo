@@ -124,6 +124,10 @@ body.is-desktop-blocked .desktop-block-overlay {
   padding-bottom: 8px;
 }
 
+.compact-subtitle {
+  margin-top: 8px !important;
+}
+
 .header-inline {
   display: flex;
   align-items: center;
@@ -788,6 +792,12 @@ select:focus {
   justify-content: center;
   gap: 2px;
   font: inherit;
+}
+
+.nav-icon-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 .nav-item.is-active {
