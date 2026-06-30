@@ -173,6 +173,20 @@ body.is-desktop-blocked .desktop-block-overlay {
   animation: welcome-rise 2s ease-out both;
 }
 
+.install-app-btn {
+  margin-top: 6px;
+}
+
+.install-app-help {
+  margin: 8px 0 0;
+  color: #475569;
+  font-size: 0.78rem;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
 .login-hint {
   margin: 8px 0 12px;
   font-size: 0.8rem;

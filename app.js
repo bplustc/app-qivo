@@ -30,6 +30,102 @@ let screenTransitionCleanupTimer = null;
 let hasInitializedFlow = false;
 const MIN_RECOMMENDED_BALANCE = 5;
 let walletMovementFilter = 'today';
+let deferredInstallPrompt = null;
+
+function getInstallElements() {
+  return {
+    button: document.getElementById('install-app-btn'),
+    help: document.getElementById('install-app-help'),
+  };
+}
+
+function setInstallHelpMessage(message) {
+  const { help } = getInstallElements();
+  if (!help) {
+    return;
+  }
+
+  if (!message) {
+    help.textContent = '';
+    help.classList.add('is-hidden');
+    return;
+  }
+
+  help.textContent = message;
+  help.classList.remove('is-hidden');
+}
+
+function isIosDevice() {
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function isStandaloneDisplay() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function enableInstallButton() {
+  const { button } = getInstallElements();
+  if (!button) {
+    return;
+  }
+
+  button.classList.remove('is-hidden');
+}
+
+function setupInstallPrompt() {
+  const { button } = getInstallElements();
+  if (!button) {
+    return;
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const fromQrInstall = urlParams.get('install') === '1';
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    enableInstallButton();
+
+    if (fromQrInstall) {
+      setInstallHelpMessage('Toca "Instalar app" para completar la instalación.');
+    }
+  });
+
+  button.addEventListener('click', async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+
+      if (choice && choice.outcome === 'accepted') {
+        setInstallHelpMessage('Instalación iniciada correctamente.');
+        button.classList.add('is-hidden');
+      } else {
+        setInstallHelpMessage('Puedes instalarla cuando quieras desde este botón.');
+      }
+      return;
+    }
+
+    if (isIosDevice() && !isStandaloneDisplay()) {
+      setInstallHelpMessage('En iPhone: Compartir > Añadir a pantalla de inicio.');
+      return;
+    }
+
+    setInstallHelpMessage('Tu navegador no permite instalación directa en este momento.');
+  });
+
+  if (isIosDevice() && !isStandaloneDisplay()) {
+    enableInstallButton();
+    if (fromQrInstall) {
+      setInstallHelpMessage('iPhone: toca Compartir y luego "Añadir a pantalla de inicio".');
+    }
+  }
+
+  window.addEventListener('appinstalled', () => {
+    setInstallHelpMessage('Aplicación instalada con éxito.');
+    button.classList.add('is-hidden');
+  });
+}
 
 function formatUsd(value) {
   return `$${Number(value || 0).toFixed(2)}`;
@@ -760,6 +856,7 @@ function registerServiceWorker() {
 
 document.addEventListener('DOMContentLoaded', () => {
   registerServiceWorker();
+  setupInstallPrompt();
 
   const tryStartFlow = () => {
     const allowed = applyDesktopRestriction();
